@@ -2,19 +2,17 @@ name: Deploy Python App to Azure
 
 on:
   push:
-    branches: [ main ]
-
-permissions:
-  id-token: write
-  contents: read
+    branches:
+      - main
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-    
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
@@ -25,15 +23,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r app_for_deployment/requirements.txt
         
-    - name: Azure Login (OIDC)
-      uses: azure/login@v2
-      with:
-        client-id: ${{ secrets.AZURE_CLIENT_ID }}
-        tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-        subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-        
     - name: Deploy to Azure Web App
       uses: azure/webapps-deploy@v3
       with:
         app-name: asisterapie
+        publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
         package: app_for_deployment
