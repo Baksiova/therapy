@@ -24,8 +24,9 @@ jobs:
         pip install -r app_for_deployment/requirements.txt
         
     - name: Deploy to Azure Web App
-      uses: azure/webapps-deploy@v3
+      uses: azure/webapps-deploy@v2
       with:
         app-name: asisterapie
         publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE }}
         package: app_for_deployment
+        slot-name: ''
