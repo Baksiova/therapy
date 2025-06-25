@@ -10,7 +10,11 @@ import unicodedata
 # Inicializácia aplikácie
 app = Flask(__name__)
 app.secret_key = "gemini-therapy-key"
-CORS(app, supports_credentials=True)
+CORS(app, supports_credentials=True, origins=[
+    "https://asisterapie-bcbqhaawdqduavgq.westeurope-01.azurewebsites.net",
+    "http://127.0.0.1:5000",  # pro local development
+    "http://localhost:5000"   # pro local development
+])
 
 # Konfigurácia Google Gemini - OPRAVENO pro environment variables
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")  # ← ZMĚNĚNO
