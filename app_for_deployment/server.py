@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
 import google.generativeai as genai
+import os  # ← PŘIDÁNO
 import uuid
 import time
 import re
@@ -11,8 +12,11 @@ app = Flask(__name__)
 app.secret_key = "gemini-therapy-key"
 CORS(app, supports_credentials=True)
 
-# Konfigurácia Google Gemini
-GEMINI_API_KEY = "AIzaSyBsnHofeQikg91qylDx0fb6TvuRQy4LBoE" # Nahraďte svojím kľúčom
+# Konfigurácia Google Gemini - OPRAVENO pro environment variables
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")  # ← ZMĚNĚNO
+if not GEMINI_API_KEY:
+    print("⚠️ WARNING: GEMINI_API_KEY environment variable not set!")
+    
 genai.configure(api_key=GEMINI_API_KEY)
 
 # Inicializácia Gemini modelu
@@ -217,15 +221,17 @@ def not_found(error):
 def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
+# OPRAVENO pro Azure App Service
 if __name__ == '__main__':
     print("=" * 80)
-    print("🩺 DR. SARAH CHEN - AI THERAPY PRACTICE (v2.2 - Robust Crisis Detection)")
+    print("🩺 DR. SARAH CHEN - AI THERAPY PRACTICE (v2.2)")
     print("=" * 80)
     print(f"🧠 AI Model: {MODEL_NAME}")
     print(f"🔗 Model Available: {'Yes' if model else 'No'}")
-    print("🚨 Crisis Protocol: Sequential, Clear, Action-Oriented (Enhanced)")
-    print("🌐 Server: http://127.0.0.1:5000")
-    print("❤️ Health: http://127.0.0.1:5000/health")
-    print("🛑 Press CTRL+C to stop")
+    print("🚨 Crisis Protocol: Enhanced Detection")
+    print("🌐 Starting Azure App Service...")
     print("=" * 80)
-    app.run(debug=True, host="127.0.0.1", port=5000)
+    
+    # Pro Azure App Service - správný host a port
+    port = int(os.environ.get('PORT', 8000))
+    app.run(debug=False, host="0.0.0.0", port=port)
