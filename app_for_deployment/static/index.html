@@ -1,488 +1,248 @@
-<!DOCTYPE html>
-<html lang="sk">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terapeutický Asistent</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary-color-start: #6D5BBA;
-            --primary-color-end: #8D58BF;
-            --secondary-bg: #f5f7fa;
-            --body-bg-start: #e0eafc;
-            --body-bg-end: #cfdef3;
-            --text-color-light: #ffffff;
-            --text-color-dark: #333333;
-            --border-color: #e0e0e0;
-            --font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            --border-radius: 20px;
-            --shadow: 0 10px 30px rgba(0, 0, 0, 0.07);
-        }
+from flask import Flask, request, jsonify, session, send_from_directory
+from flask_cors import CORS
+import google.generativeai as genai
+import os
+import uuid
+import time
+import re
+import unicodedata
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+# Inicializácia aplikácie
+app = Flask(__name__, static_folder='static')
+app.secret_key = "gemini-therapy-key"
+CORS(app, supports_credentials=True, origins=[
+    "https://asisterapie-bcbqhaawdqduavgq.westeurope-01.azurewebsites.net",
+    "http://127.0.0.1:5000",  # pro local development
+    "http://localhost:5000"   # pro local development
+])
 
-        body {
-            font-family: var(--font-family);
-            background: linear-gradient(135deg, var(--body-bg-start) 0%, var(--body-bg-end) 100%);
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 15px;
-        }
+# Konfigurácia Google Gemini - OPRAVENO pro environment variables
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    print("⚠️ WARNING: GEMINI_API_KEY environment variable not set!")
+    
+genai.configure(api_key=GEMINI_API_KEY)
 
-        .app-container {
-            width: 100%;
-            max-width: 800px;
-            height: 95vh;
-            background: var(--text-color-light);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+# Inicializácia Gemini modelu
+try:
+    model = genai.GenerativeModel('gemini-1.5-flash')
+    MODEL_NAME = 'gemini-1.5-flash'
+except Exception as e:
+    print(f"Failed to load 'gemini-1.5-flash': {e}. Trying 'gemini-pro'.")
+    try:
+        model = genai.GenerativeModel('gemini-pro')
+        MODEL_NAME = 'gemini-pro'
+    except Exception as e_pro:
+        print(f"Failed to load 'gemini-pro': {e_pro}. No model available.")
+        model = None
+        MODEL_NAME = 'No model available'
 
-        .chat-header {
-            background: linear-gradient(135deg, var(--primary-color-start) 0%, var(--primary-color-end) 100%);
-            color: var(--text-color-light);
-            padding: 20px;
-            text-align: center;
-            position: relative;
-            z-index: 10;
-            flex-shrink: 0;
-        }
+# Uchovávanie konverzácií
+conversations = {}
 
-        .chat-header h1 {
-            font-size: 22px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
+# Systémový prompt
+THERAPY_SYSTEM_PROMPT = """You are Dr. Sarah Chen, an experienced licensed psychotherapist..."""
 
-        .chat-header .chat-subtitle {
-            font-size: 13px;
-            opacity: 0.9;
-            font-weight: 400;
-        }
+def get_session_id():
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+    return session['session_id']
 
-        .new-session-btn {
-            position: absolute; right: 20px; top: 50%; transform: translateY(-50%);
-            background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.2);
-            color: var(--text-color-light); padding: 8px 16px; border-radius: 20px;
-            cursor: pointer; font-size: 12px; font-family: var(--font-family);
-            transition: all 0.3s ease; display: flex; align-items: center; gap: 6px;
-        }
-        .new-session-btn:hover { background: rgba(255, 255, 255, 0.25); transform: translateY(-52%); }
+# --- VYLEPŠENÁ FUNKCIA NA DETEKCIU KRÍZY ---
+def strip_accents(text):
+    """Odstráni diakritiku z textu pre lepšie porovnávanie."""
+    return ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
 
-        .status-indicator {
-            position: absolute; top: 15px; left: 20px; padding: 4px 10px;
-            border-radius: 12px; font-size: 11px; font-weight: 500;
-            background: rgba(0, 0, 0, 0.2); color: var(--text-color-light); transition: all 0.3s ease;
-        }
-        .status-indicator.connected { background: #2ecc71; }
-        .status-indicator.disconnected { background: #e74c3c; }
-        .status-indicator.connecting { background: #f1c40f; }
+def detect_crisis_keywords(message):
+    normalized_message = strip_accents(message.lower())
+    crisis_keywords = [
+        'suicide', 'suicidal', 'kill myself', 'end my life', 'want to die', 'better off dead', 'end it all', 'take my own life', 'hurt myself', 'cut myself', 'harm myself', 'self harm',
+        'samovrazda', 'sebevrazda', 'zabijem sa', 'zabit sa', 'ukoncit zivot', 'chcem zomriet', 'chci umrit', 'ublizit si', 'uskodit si',
+        'chcem to skoncit', 'chci to skoncit', 'nevladzem dalej', 'uz nemuzu', 'je po vsem', 'nema to zmysel', 'nema to smysl',
+        'overdose', 'predavkoval', 'bad trip', 'halucinacie',
+        'no point living', 'life is meaningless', 'cannot go on'
+    ]
+    
+    if any(keyword in normalized_message for keyword in crisis_keywords):
+        return True
+    
+    all_patterns = [
+        r'myslim na (sebevrazd|samovrazd)',
+        r'chci (spachat|spachat) (sebevrazd|samovrazd)',
+        r'chcem (spachat|spachat) (sebevrazd|samovrazd)',
+        r'chci (skocit|skoncit)',
+        r'chcem (skocit|skoncit)',
+        r'\bi want to (die|kill|hurt|harm)',
+        r'\bi (wish|want) i (was|were) dead',
+        r'\bi can\'?t (take|handle|deal with) (this|it) anymore',
+        r'\blife isn\'?t worth',
+        r'\bi (am|was) on [a-z]+',
+        r'\bi took [a-z]+',
+        r'\bi\'m (high|tripping|freaking)',
+        r'\bseeing (fractals|patterns|colors)',
+        r'\bhearing (things|voices)',
+        r'\bcan\'?t (stop|come down|control)'
+    ]
+    
+    return any(re.search(pattern, normalized_message) for pattern in all_patterns)
 
-        .app-main-content {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
-        .view {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; 
-            flex-direction: column;
-            background: var(--secondary-bg);
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        .view.active {
-            opacity: 1;
-            visibility: visible;
-        }
+def generate_crisis_response_sequence():
+    return [
+        {"type": "validation", "content": "Ďakujem, že ste mi to povedali. Je to veľmi vážne a je dôležité, aby ste sa porozprávali s niekým, kto vám môže pomôcť práve teraz."},
+        {"type": "resources_title", "content": "Tu sú kontakty na linky pomoci. Sú bezplatné, anonymné a dostupné nonstop:"},
+        {"type": "resources_list", "content": "• **Ak ste v bezprostrednom ohrození, volajte 112**\n• **Linka dôvery Nezábudka (SK):** 0800 800 566\n• **Krízová linka pomoci (IPčko):** www.krizovalinkapomoci.sk (chat)\n• **Linka bezpečí (CZ):** 116 111"},
+        {"type": "encouragement", "content": "Prosím, zvážte zavolanie alebo napísanie na jednu z týchto liniek. Sú tam ľudia, ktorí sú školení na to, aby vám pomohli."},
+        {"type": "safety_check", "content": "Som tu s vami. Ste práve teraz v bezpečí?"}
+    ]
 
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-        }
-        .message {
-            margin-bottom: 20px; display: flex; align-items: flex-end;
-            gap: 10px; animation: slideIn 0.4s ease-out;
-        }
-        @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .message.user { justify-content: flex-end; }
-        .message.bot { justify-content: flex-start; }
-        .message-content {
-            max-width: 75%; padding: 12px 18px; border-radius: var(--border-radius);
-            word-wrap: break-word; line-height: 1.5; font-weight: 400;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-        }
-        .message.user .message-content {
-            background: linear-gradient(135deg, var(--primary-color-start) 0%, var(--primary-color-end) 100%);
-            color: var(--text-color-light); border-bottom-right-radius: 5px;
-        }
-        .message.bot .message-content {
-            background: var(--text-color-light); color: var(--text-color-dark); border-bottom-left-radius: 5px;
-            white-space: pre-wrap; /* Toto zabezpečí, že sa zalomia riadky pre krízové zdroje */
-        }
-        .message-avatar {
-            width: 40px; height: 40px; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; flex-shrink: 0;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.08); background: #fff;
-        }
-        .message-avatar svg { width: 20px; height: 20px; fill: var(--primary-color-start); }
-        .message.user .message-avatar { order: 1; }
-        
-        .chat-input-container {
-            padding: 15px 20px; background: var(--text-color-light);
-            border-top: 1px solid var(--border-color);
-        }
-        .chat-input-form { display: flex; gap: 10px; align-items: center; }
-        .chat-input {
-            flex: 1; padding: 14px 20px; border: 1px solid var(--border-color);
-            border-radius: 30px; font-size: 16px; font-family: var(--font-family);
-            outline: none; transition: border-color 0.3s ease, box-shadow 0.3s ease;
-        }
-        .chat-input:focus { border-color: var(--primary-color-start); box-shadow: 0 0 0 3px rgba(109, 91, 186, 0.15); }
-        .chat-input:disabled { background: #f5f5f5; cursor: not-allowed; }
-        
-        .send-button {
-            background: linear-gradient(135deg, var(--primary-color-start) 0%, var(--primary-color-end) 100%);
-            color: var(--text-color-light); border: none; width: 50px; height: 50px;
-            border-radius: 50%; cursor: pointer; transition: all 0.3s ease;
-            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-        }
-        .send-button svg { width: 24px; height: 24px; }
-        .send-button:hover:not(:disabled) { transform: scale(1.1); }
-        .send-button:disabled { opacity: 0.6; cursor: not-allowed; transform: scale(1); }
+def call_gemini_ai(user_message, conversation_history):
+    if model is None:
+        print("❌ No Gemini model available")
+        return generate_fallback_response(user_message)
+    try:
+        context = THERAPY_SYSTEM_PROMPT + "\n\n"
+        recent_history = conversation_history[-10:] if len(conversation_history) > 10 else conversation_history
+        if recent_history:
+            context += "Previous conversation:\n"
+            for msg in recent_history:
+                context += f"{msg['role'].capitalize()}: {msg['content']}\n"
+        context += f"\nCurrent user message: {user_message}\n\nPlease respond as a compassionate therapy assistant:"
+        response = model.generate_content(context, generation_config=genai.types.GenerationConfig(temperature=0.7, max_output_tokens=300, top_p=0.8, top_k=40))
+        if hasattr(response, 'text') and response.text:
+            return response.text.strip()
+        elif hasattr(response, 'candidates') and response.candidates:
+            return response.candidates[0].content.parts[0].text.strip()
+        else:
+            print("❌ No text in Gemini response")
+            return generate_fallback_response(user_message)
+    except Exception as e:
+        print(f"❌ Gemini API Error: {e}")
+        return generate_fallback_response(user_message)
 
-        .typing-indicator { display: none; align-items: center; margin: 0 20px 20px; gap: 10px; }
-        .typing-dots { background: var(--text-color-light); border-radius: 18px; padding: 14px 18px; display: flex; gap: 5px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); }
-        .dot { width: 8px; height: 8px; background: #ccc; border-radius: 50%; animation: typing 1.4s infinite ease-in-out; }
-        .dot:nth-child(2) { animation-delay: 0.2s; } .dot:nth-child(3) { animation-delay: 0.4s; }
-        @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1.0); } }
-        .error-message { background: #fff0f0; color: #c0392b; padding: 12px; border-radius: 10px; margin: 0 20px 15px; border-left: 4px solid #e74c3c; animation: slideIn 0.3s ease-out; font-size: 14px; }
-        .welcome-message { text-align: center; color: #777; padding: 15px; font-size: 14px; }
+def generate_fallback_response(user_message):
+    if any(word in user_message.lower() for word in ['hello', 'hi', 'hey']):
+        return "Hello, I'm here to offer support. How are you feeling today?"
+    return "I hear you, and it sounds like you're going through a lot. Can you tell me more about what's happening?"
 
-        #toolsView {
-            padding: 20px;
-            overflow-y: auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 20px;
-            align-content: start;
-        }
-        .tool-card {
-            background: #fff;
-            border-radius: 16px;
-            padding: 20px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            border: 1px solid var(--border-color);
-        }
-        .tool-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 8px 20px rgba(109, 91, 186, 0.15);
-        }
-        .tool-card-icon {
-            width: 50px; height: 50px;
-            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
-            border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-        }
-        .tool-card-icon svg { fill: var(--text-color-light); width: 28px; height: 28px; }
-        .tool-card-content h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; color: var(--text-color-dark); }
-        .tool-card-content p { font-size: 14px; color: #666; }
+def list_available_models():
+    try:
+        return [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+    except Exception as e:
+        print(f"❌ Error listing models: {e}")
+        return []
 
-        .app-nav {
-            display: flex;
-            background: #fff;
-            border-top: 1px solid var(--border-color);
-            padding: 8px 0;
-            flex-shrink: 0;
-        }
-        .nav-btn {
-            flex: 1; background: none; border: none;
-            color: #999;
-            display: flex; flex-direction: column; align-items: center;
-            gap: 4px; cursor: pointer;
-            transition: color 0.3s ease;
-            font-family: var(--font-family);
-        }
-        .nav-btn.active, .nav-btn:hover {
-            color: var(--primary-color-start);
-        }
-        .nav-btn svg { width: 24px; height: 24px; fill: currentColor; }
-        .nav-btn span { font-size: 11px; font-weight: 500; }
+# ===== NOVÉ: Frontend route =====
+@app.route('/', methods=['GET'])
+def frontend():
+    """Servíruje frontend HTML aplikáciu"""
+    try:
+        return send_from_directory('static', 'index.html')
+    except Exception as e:
+        print(f"❌ Error serving frontend: {e}")
+        # Fallback na API info
+        return jsonify({
+            "message": "Therapy Chatbot with Google Gemini AI", 
+            "status": "healthy", 
+            "mode": f"GOOGLE {MODEL_NAME}",
+            "available_models": list_available_models(),
+            "features": ["Crisis detection", "Emergency resources", "Real AI responses"],
+            "endpoints": {"health": "/health", "chat": "/chat", "new_session": "/new-session"},
+            "frontend_error": "Could not load frontend HTML. Please check static/index.html file."
+        })
 
-        @media (max-width: 768px) {
-            body { padding: 0; }
-            .app-container { width: 100%; height: 100vh; border-radius: 0; }
-            .chat-header h1 { font-size: 20px; }
-            .new-session-btn { padding: 6px 10px; font-size: 11px; }
-            .new-session-btn span { display: none; }
-            #toolsView { grid-template-columns: 1fr; }
-        }
-    </style>
-</head>
-<body>
-    <div class="app-container">
-        <div class="chat-header">
-            <div class="status-indicator connecting" id="statusIndicator">Connecting...</div>
-            <h1 id="headerTitle">🌱 Váš Terapeutický Asistent</h1>
-            <p id="headerSubtitle" class="chat-subtitle">Bezpečný priestor pre vaše myšlienky</p>
-            <button class="new-session-btn" onclick="startNewSession()">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg>
-                <span id="newSessionText">New Session</span>
-            </button>
-        </div>
+@app.route('/api', methods=['GET'])
+def api_info():
+    """API informácie (pôvodná root route)"""
+    return jsonify({
+        "message": "Therapy Chatbot with Google Gemini AI", 
+        "status": "healthy", 
+        "mode": f"GOOGLE {MODEL_NAME}",
+        "available_models": list_available_models(),
+        "features": ["Crisis detection", "Emergency resources", "Real AI responses"],
+        "endpoints": {"health": "/health", "chat": "/chat", "new_session": "/new-session"}
+    })
 
-        <main class="app-main-content">
-            <div id="chatView" class="view active">
-                <div class="chat-messages" id="chatMessages">
-                    <div class="welcome-message">Vitajte. Všetko, čo tu zdieľate, je dôverné.</div>
-                    <div class="message bot">
-                        <div class="message-avatar">
-                            <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>
-                        </div>
-                        <div class="message-content">Dobrý deň! Som tu, aby som vás počúval a podporil. Ako sa dnes cítite?</div>
-                    </div>
-                </div>
-                <div class="typing-indicator" id="typingIndicator">
-                    <div class="message-avatar">
-                        <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>
-                    </div>
-                    <div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
-                </div>
-                <div class="chat-input-container">
-                    <form class="chat-input-form" onsubmit="sendMessage(event)">
-                        <input type="text" class="chat-input" id="messageInput" placeholder="Napíšte svoju správu..." maxlength="500" autocomplete="off" disabled>
-                        <button type="submit" class="send-button" id="sendButton" disabled>
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                        </button>
-                    </form>
-                </div>
-            </div>
+@app.route('/health', methods=['GET'])
+def health():
+    return jsonify({
+        "status": "healthy", "message": "Gemini AI therapy server is running",
+        "mode": f"GOOGLE {MODEL_NAME}", "model_available": model is not None,
+        "active_sessions": len(conversations)
+    })
 
-            <div id="toolsView" class="view">
-                <div class="tool-card" onclick="alert('Spúšťam dychové cvičenie...')">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.2,19H12.8C13.9,19 14.8,18.1 14.8,17V15H9.2V17C9.2,18.1 10.1,19 11.2,19H11.8V19.5C11.8,19.8 12,20 12.3,20S12.8,19.8 12.8,19.5V19M19.7,9.8C19.4,9.5 19,9.3 18.5,9.3H15.3V6.8C15.3,6.3 14.8,5.9 14.3,5.9S13.3,6.3 13.3,6.8V9.3H10.8V4.8C10.8,4.3 10.3,3.9 9.8,3.9S8.8,4.3 8.8,4.8V9.3H5.5C5,9.3 4.6,9.5 4.3,9.8C4,10.1 3.9,10.6 4.1,11L8.1,14.3H15.9L19.9,11C20.1,10.6 20,10.1 19.7,9.8Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Hlboký nádych</h3><p>5-minútové cvičenie na okamžité upokojenie.</p></div>
-                </div>
-                <div class="tool-card" onclick="alert('Spúšťam cvičenie vďačnosti...')">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 3H7C5.9 3 5 3.9 5 5V19C5 20.1 5.9 21 7 21H17C18.1 21 19 20.1 19 19V5C19 3.9 18.1 3 17 3M12 18.2L11.1 17.4C8.2 14.8 6 12.8 6 10.3C6 8.5 7.5 7 9.3 7C10.3 7 11.3 7.4 12 8.1C12.7 7.4 13.7 7 14.7 7C16.5 7 18 8.5 18 10.3C18 12.8 15.8 14.8 12.9 17.4L12 18.2Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Denník vďačnosti</h3><p>Zapíšte si tri veci, za ktoré ste vďační.</p></div>
-                </div>
-                 <div class="tool-card" onclick="alert('Spúšťam meditáciu...')">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21,12C21,16.97 16.97,21 12,21C7.03,21 3,16.97 3,12C3,7.03 7.03,3 12,3C12.54,3 13.07,3.05 13.58,3.14L12,7L10.42,3.14C10.93,3.05 11.46,3 12,3M12,19C15.87,19 19,15.87 19,12C19,8.13 15.87,5 12,5C8.13,5 5,8.13 5,12C5,15.87 8.13,19 12,19M8.5,12.5L12,6L15.5,12.5H8.5M15.5,14.5L12,18L8.5,14.5H15.5Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Skenovanie tela</h3><p>10-minútová riadená meditácia na uvoľnenie.</p></div>
-                </div>
-            </div>
-        </main>
+@app.route('/chat', methods=['POST'])
+def chat():
+    try:
+        data = request.get_json()
+        if not data: return jsonify({"error": "No data provided"}), 400
+        user_message = data.get("message", "").strip()
+        if not user_message: return jsonify({"error": "Message is required"}), 400
+        session_id = get_session_id()
+        print(f"🤖 Session: {session_id} | 👤 User: {user_message}")
 
-        <nav class="app-nav">
-            <button class="nav-btn active" data-view="chatView" data-title="🌱 Váš Terapeutický Asistent" data-subtitle="Bezpečný priestor pre vaše myšlienky">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H5.2L4,17.2V4H20V16M6,9H18V11H6V9M6,12H15V14H6V12M6,6H18V8H6V6Z" /></svg>
-                <span>Chat</span>
-            </button>
-            <button class="nav-btn" data-view="toolsView" data-title="🧘 Nástroje pre pokoj" data-subtitle="Cvičenia pre vašu myseľ a telo">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14.5,4A1.5,1.5 0 0,1 16,5.5A1.5,1.5 0 0,1 14.5,7A1.5,1.5 0 0,1 13,5.5A1.5,1.5 0 0,1 14.5,4M22,13.5C22,12.44 20.89,11.05 19.2,11.05C18.66,11.05 18.23,11.19 17.91,11.41C17.06,10 15.63,8.95 13.5,8.95C10.5,8.95 8,11.5 8,14.5V20H10V14.5C10,12.61 11.61,11.05 13.5,11.05C15.11,11.05 16.44,12.18 16.89,13.62C16.5,14.2 16.2,14.88 16.2,15.65C16.2,17.75 18.13,18.95 20,18.95C21.97,18.95 22,16.5 22,16.5H20C20,16.5 19.88,17.05 18.7,17.05C17.88,17.05 17.9,16.2 17.9,15.65C17.9,14.7 18.5,13.5 20,13.5H22M6,13.5C6,12.44 4.89,11.05 3.2,11.05C2.66,11.05 2.23,11.19 1.91,11.41C1.06,10 0,8.95 0,8.95C0,8.95 2.5,11.5 2,14.5V20H4V14.5C4,12.61 5.61,11.05 7.5,11.05C9.11,11.05 10.44,12.18 10.89,13.62C10.5,14.2 10.2,14.88 10.2,15.65C10.2,17.75 12.13,18.95 14,18.95C15.97,18.95 16,16.5 16,16.5H14C14,16.5 13.88,17.05 12.7,17.05C11.88,17.05 11.9,16.2 11.9,15.65C11.9,14.7 12.5,13.5 14,13.5H16C16,13.5 16,12.44 14.89,11.05C13.2,11.05 12.23,11.19 11.91,11.41C11.06,10 9.63,8.95 7.5,8.95C4.5,8.95 6,11.5 6,13.5Z" /></svg>
-                <span>Nástroje</span>
-            </button>
-        </nav>
-    </div>
+        if detect_crisis_keywords(user_message):
+            print(f"🚨 CRISIS DETECTED! Activating safety protocol for session {session_id}.")
+            crisis_response_sequence = generate_crisis_response_sequence()
+            if session_id not in conversations: conversations[session_id] = []
+            conversations[session_id].append({"role": "user", "content": user_message})
+            full_crisis_text = "\n".join([msg["content"] for msg in crisis_response_sequence])
+            conversations[session_id].append({"role": "assistant", "content": f"[CRISIS PROTOCOL ACTIVATED] {full_crisis_text}"})
+            return jsonify({
+                "response_sequence": crisis_response_sequence, "session_id": session_id,
+                "crisis_detected": True, "powered_by": "Crisis Safety Protocol"
+            })
 
-    <script>
-        const API_BASE_URL = 'https://asisterapie-bcbqhaawdqduavgq.westeurope-01.azurewebsites.net';
-        const CHECK_CONNECTION_INTERVAL = 30000;
-        let isConnected = false;
-        let connectionCheckInterval;
-        const chatMessages = document.getElementById('chatMessages');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const typingIndicator = document.getElementById('typingIndicator');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const botAvatarSVG = `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>`;
-        const userAvatarSVG = `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12A10,10,0,0,0,12,22A10,10,0,0,0,22,12A10,10,0,0,0,12,2ZM12,6a3,3,0,1,1-3,3A3,3,0,0,1,12,6Zm0,14a7,7,0,0,1-7-7c0-2.39,1.95-4.36,4.36-4.36h5.28C17.05,8.64,19,10.61,19,13A7,7,0,0,1,12,20Z"/></svg>`;
-        
-        async function checkConnection() {
-            try {
-                const response = await fetch(`${API_BASE_URL}/health`, { method: 'GET', credentials: 'include' });
-                if (response.ok) {
-                    isConnected = true;
-                    statusIndicator.textContent = 'Pripojené';
-                    statusIndicator.className = 'status-indicator connected';
-                    messageInput.disabled = false; sendButton.disabled = false;
-                    messageInput.placeholder = 'Napíšte svoju správu...';
-                } else { throw new Error(`Server responded with status: ${response.status}`); }
-            } catch (error) {
-                isConnected = false;
-                statusIndicator.textContent = 'Odpojené'; statusIndicator.className = 'status-indicator disconnected';
-                messageInput.disabled = true; sendButton.disabled = true;
-                messageInput.placeholder = 'Server nie je dostupný...';
-            }
-        }
+        if session_id not in conversations: conversations[session_id] = []
+        conversations[session_id].append({"role": "user", "content": user_message})
+        print(f"🔄 Calling Google Gemini AI ({MODEL_NAME})...")
+        bot_reply = call_gemini_ai(user_message, conversations[session_id])
+        print(f"🤖 Gemini: {bot_reply[:100]}..." if len(bot_reply) > 100 else f"🤖 Gemini: {bot_reply}")
+        conversations[session_id].append({"role": "assistant", "content": bot_reply})
+        if len(conversations[session_id]) > 20:
+            conversations[session_id] = conversations[session_id][-20:]
+        return jsonify({
+            "response_sequence": [{"type": "standard", "content": bot_reply}], "session_id": session_id,
+            "powered_by": f"Google {MODEL_NAME}", "crisis_detected": False
+        })
+    except Exception as e:
+        print(f"❌ Error in /chat: {e}")
+        fallback = generate_fallback_response(user_message if 'user_message' in locals() else "hello")
+        return jsonify({
+            "response_sequence": [{"type": "fallback", "content": fallback}],
+            "powered_by": "Fallback response", "error": "Used backup system"
+        })
 
-        async function sendMessage(event) {
-            event.preventDefault();
-            const message = messageInput.value.trim();
-            if (!message || messageInput.disabled) return;
-            if (!isConnected) { showError('Nie je možné pripojiť sa k serveru. Skúšame znova...'); checkConnection(); return; }
-            
-            addMessage(message, 'user');
-            messageInput.value = '';
-            sendButton.disabled = true; messageInput.disabled = true;
-            showTypingIndicator();
+@app.route('/new-session', methods=['POST'])
+def new_session():
+    try:
+        if 'session_id' in session:
+            if session['session_id'] in conversations: del conversations[session['session_id']]
+        session.clear()
+        new_session_id = get_session_id()
+        print(f"✨ New session created: {new_session_id}")
+        return jsonify({"message": "New session started", "session_id": new_session_id})
+    except Exception as e:
+        print(f"❌ Error creating new session: {e}")
+        return jsonify({"error": "Failed to create new session"}), 500
 
-            try {
-                const response = await fetch(`${API_BASE_URL}/chat`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    credentials: 'include', 
-                    body: JSON.stringify({ message: message }) 
-                });
-                const data = await response.json();
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Endpoint not found"}), 404
 
-                hideTypingIndicator(); // Skryjeme indikátor hneď po prijatí odpovede
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"error": "Internal server error"}), 500
 
-                if (response.ok) {
-                    if (data.response_sequence && data.response_sequence.length > 0) {
-                        for (let i = 0; i < data.response_sequence.length; i++) {
-                            const msg = data.response_sequence[i];
-                            // Pridáme malé oneskorenie medzi správami pre prirodzenejší pocit
-                            await new Promise(resolve => setTimeout(resolve, i === 0 ? 100 : 800));
-                            addMessage(msg.content, 'bot', msg.type);
-                        }
-                    } else {
-                        showError('Server vrátil prázdnu odpoveď.');
-                    }
-                } else { 
-                    throw new Error(data.error || 'Nepodarilo sa získať odpoveď zo servera'); 
-                }
-            } catch (error) {
-                console.error('Error sending message:', error);
-                showError('Chyba siete. Skontrolujte pripojenie a skúste to znova.');
-                await checkConnection();
-            } finally {
-                hideTypingIndicator();
-                if (isConnected) { 
-                    sendButton.disabled = false; 
-                    messageInput.disabled = false; 
-                    messageInput.focus(); 
-                }
-            }
-        }
-
-        function addMessage(content, sender, type = 'standard') {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.innerHTML = sender === 'user' ? userAvatarSVG : botAvatarSVG;
-            
-            const messageContent = document.createElement('div');
-            messageContent.className = 'message-content';
-            
-            // Text sa vloží bezpečne, aby sa zabránilo HTML injekcii
-            messageContent.textContent = content;
-            
-            messageDiv.appendChild(avatar);
-            messageDiv.appendChild(messageContent);
-            
-            if (sender === 'user') { 
-                messageDiv.style.flexDirection = 'row-reverse'; 
-            }
-            
-            chatMessages.appendChild(messageDiv);
-            scrollToBottom();
-        }
-
-        function showError(message) {
-            const existingError = chatMessages.querySelector('.error-message');
-            if (existingError) existingError.remove();
-            const errorDiv = document.createElement('div');
-            errorDiv.className = 'error-message';
-            errorDiv.textContent = `❌ ${message}`;
-            chatMessages.appendChild(errorDiv);
-            scrollToBottom();
-            setTimeout(() => { if (errorDiv.parentNode) { errorDiv.remove(); } }, 5000);
-        }
-
-        async function startNewSession() {
-            if (!isConnected) { showError('Nie je možné pripojiť sa k serveru.'); checkConnection(); return; }
-            try {
-                const response = await fetch(`${API_BASE_URL}/new-session`, { method: 'POST', credentials: 'include' });
-                if (response.ok) {
-                    const welcomeMessage = chatMessages.querySelector('.welcome-message');
-                    const firstBotMessage = chatMessages.querySelector('.message.bot:first-of-type');
-                    chatMessages.innerHTML = '';
-                    if (welcomeMessage) chatMessages.appendChild(welcomeMessage);
-                    if (firstBotMessage) { chatMessages.appendChild(firstBotMessage.cloneNode(true)); }
-                    addMessage('Nová konverzácia bola spustená. Som pripravený počúvať.', 'bot');
-                } else { 
-                    const data = await response.json(); 
-                    throw new Error(data.error || 'Nepodarilo sa začať novú konverzáciu'); 
-                }
-            } catch (error) { 
-                console.error('Error starting new session:', error); 
-                showError('Nepodarilo sa začať novú konverzáciu. Skúste to znova.'); 
-            }
-        }
-
-        function showTypingIndicator() { typingIndicator.style.display = 'flex'; scrollToBottom(); }
-        function hideTypingIndicator() { typingIndicator.style.display = 'none'; }
-        function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            checkConnection();
-            setTimeout(() => messageInput.focus(), 100);
-            connectionCheckInterval = setInterval(checkConnection, CHECK_CONNECTION_INTERVAL);
-            messageInput.addEventListener('keypress', function(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendButton.click(); }});
-
-            const navButtons = document.querySelectorAll('.nav-btn');
-            const views = document.querySelectorAll('.view');
-            const headerTitle = document.getElementById('headerTitle');
-            const headerSubtitle = document.getElementById('headerSubtitle');
-            const newSessionBtn = document.querySelector('.new-session-btn');
-
-            navButtons.forEach(button => {
-                button.addEventListener('click', () => {
-                    navButtons.forEach(btn => btn.classList.remove('active'));
-                    button.classList.add('active');
-                    const viewId = button.dataset.view;
-                    const title = button.dataset.title;
-                    const subtitle = button.dataset.subtitle;
-                    views.forEach(view => {
-                        view.classList.remove('active');
-                        if (view.id === viewId) {
-                            view.classList.add('active');
-                        }
-                    });
-                    headerTitle.innerHTML = title;
-                    headerSubtitle.textContent = subtitle;
-                    newSessionBtn.style.display = (viewId === 'chatView') ? 'flex' : 'none';
-                });
-            });
-        });
-        
-        window.addEventListener('focus', () => { if (!messageInput.disabled) messageInput.focus(); });
-        window.addEventListener('beforeunload', () => { if (connectionCheckInterval) clearInterval(connectionCheckInterval); });
-
-    </script>
-</body>
-</html>
+# Pro Azure App Service
+if __name__ == '__main__':
+    print("=" * 80)
+    print("🩺 DR. SARAH CHEN - AI THERAPY PRACTICE (v2.3)")
+    print("=" * 80)
+    print(f"🧠 AI Model: {MODEL_NAME}")
+    print(f"🔗 Model Available: {'Yes' if model else 'No'}")
+    print("🚨 Crisis Protocol: Enhanced Detection")
+    print("🌐 Starting Azure App Service with Frontend...")
+    print("=" * 80)
+    
+    port = int(os.environ.get('PORT', 8000))
+    app.run(debug=False, host="0.0.0.0", port=port)
