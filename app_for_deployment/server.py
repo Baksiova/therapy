@@ -225,6 +225,19 @@ def not_found(error):
 def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
+@app.route('/test-frontend', methods=['GET'])
+def test_frontend():
+    import os
+    static_path = os.path.join(app.root_path, 'static')
+    files = os.listdir(static_path) if os.path.exists(static_path) else []
+    return jsonify({
+        "static_folder": app.static_folder,
+        "static_path": static_path,
+        "static_files": files,
+        "index_exists": os.path.exists(os.path.join(static_path, 'index.html'))
+    })
+
+
 # OPRAVENO pro Azure App Service
 if __name__ == '__main__':
     print("=" * 80)
