@@ -1,14 +1,14 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, session, send_from_directory  # ← PŘIDÁNO send_from_directory
 from flask_cors import CORS
 import google.generativeai as genai
-import os  # ← PŘIDÁNO
+import os
 import uuid
 import time
 import re
 import unicodedata
 
 # Inicializácia aplikácie
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static')  # ← PŘIDÁNO static_folder='static'
 app.secret_key = "gemini-therapy-key"
 CORS(app, supports_credentials=True, origins=[
     "https://asisterapie-bcbqhaawdqduavgq.westeurope-01.azurewebsites.net",
@@ -17,7 +17,7 @@ CORS(app, supports_credentials=True, origins=[
 ])
 
 # Konfigurácia Google Gemini - OPRAVENO pro environment variables
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")  # ← ZMĚNĚNO
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
     print("⚠️ WARNING: GEMINI_API_KEY environment variable not set!")
     
@@ -40,7 +40,7 @@ except Exception as e:
 # Uchovávanie konverzácií
 conversations = {}
 
-# Systémový prompt (bez zmeny)
+# Systémový prompt
 THERAPY_SYSTEM_PROMPT = """You are Dr. Sarah Chen, an experienced licensed psychotherapist..."""
 
 def get_session_id():
@@ -54,14 +54,7 @@ def strip_accents(text):
     return ''.join(c for c in unicodedata.normalize('NFD', text) if unicodedata.category(c) != 'Mn')
 
 def detect_crisis_keywords(message):
-    """
-    VYLEPŠENÉ: Používa normalizáciu textu a rozšírený zoznam slov a vzorov
-    pre oveľa spoľahlivejšiu detekciu.
-    """
-    # Normalizácia vstupu - odstránenie diakritiky a malé písmená
     normalized_message = strip_accents(message.lower())
-
-    # Rozšírený zoznam kľúčových slov bez diakritiky
     crisis_keywords = [
         'suicide', 'suicidal', 'kill myself', 'end my life', 'want to die', 'better off dead', 'end it all', 'take my own life', 'hurt myself', 'cut myself', 'harm myself', 'self harm',
         'samovrazda', 'sebevrazda', 'zabijem sa', 'zabit sa', 'ukoncit zivot', 'chcem zomriet', 'chci umrit', 'ublizit si', 'uskodit si',
@@ -69,14 +62,11 @@ def detect_crisis_keywords(message):
         'overdose', 'predavkoval', 'bad trip', 'halucinacie',
         'no point living', 'life is meaningless', 'cannot go on'
     ]
-
-    # Priame porovnanie so zoznamom
+    
     if any(keyword in normalized_message for keyword in crisis_keywords):
         return True
-
-    # Rozšírené regulárne výrazy pre normalizovaný text
+    
     all_patterns = [
-        # Samovražda a sebapoškodzovanie
         r'myslim na (sebevrazd|samovrazd)',
         r'chci (spachat|spachat) (sebevrazd|samovrazd)',
         r'chcem (spachat|spachat) (sebevrazd|samovrazd)',
@@ -86,7 +76,6 @@ def detect_crisis_keywords(message):
         r'\bi (wish|want) i (was|were) dead',
         r'\bi can\'?t (take|handle|deal with) (this|it) anymore',
         r'\blife isn\'?t worth',
-        # Užívanie drog
         r'\bi (am|was) on [a-z]+',
         r'\bi took [a-z]+',
         r'\bi\'m (high|tripping|freaking)',
@@ -94,11 +83,9 @@ def detect_crisis_keywords(message):
         r'\bhearing (things|voices)',
         r'\bcan\'?t (stop|come down|control)'
     ]
-
-    # Prehľadávanie pomocou regulárnych výrazov
+    
     return any(re.search(pattern, normalized_message) for pattern in all_patterns)
 
-# (Ostatné funkcie zostávajú bez zmeny)
 def generate_crisis_response_sequence():
     return [
         {"type": "validation", "content": "Ďakujem, že ste mi to povedali. Je to veľmi vážne a je dôležité, aby ste sa porozprávali s niekým, kto vám môže pomôcť práve teraz."},
@@ -144,10 +131,32 @@ def list_available_models():
         print(f"❌ Error listing models: {e}")
         return []
 
+# ===== NOVÉ: Frontend route =====
 @app.route('/', methods=['GET'])
-def root():
+def frontend():
+    """Servíruje frontend HTML aplikáciu"""
+    try:
+        return send_from_directory('static', 'index.html')
+    except Exception as e:
+        print(f"❌ Error serving frontend: {e}")
+        # Fallback na API info
+        return jsonify({
+            "message": "Therapy Chatbot with Google Gemini AI", 
+            "status": "healthy", 
+            "mode": f"GOOGLE {MODEL_NAME}",
+            "available_models": list_available_models(),
+            "features": ["Crisis detection", "Emergency resources", "Real AI responses"],
+            "endpoints": {"health": "/health", "chat": "/chat", "new_session": "/new-session"},
+            "frontend_error": "Could not load frontend HTML. Please check static/index.html file."
+        })
+
+@app.route('/api', methods=['GET'])
+def api_info():
+    """API informácie (pôvodná root route)"""
     return jsonify({
-        "message": "Therapy Chatbot with Google Gemini AI", "status": "healthy", "mode": f"GOOGLE {MODEL_NAME}",
+        "message": "Therapy Chatbot with Google Gemini AI", 
+        "status": "healthy", 
+        "mode": f"GOOGLE {MODEL_NAME}",
         "available_models": list_available_models(),
         "features": ["Crisis detection", "Emergency resources", "Real AI responses"],
         "endpoints": {"health": "/health", "chat": "/chat", "new_session": "/new-session"}
@@ -171,7 +180,6 @@ def chat():
         session_id = get_session_id()
         print(f"🤖 Session: {session_id} | 👤 User: {user_message}")
 
-        # Krízový protokol sa teraz spúšťa oveľa spoľahlivejšie
         if detect_crisis_keywords(user_message):
             print(f"🚨 CRISIS DETECTED! Activating safety protocol for session {session_id}.")
             crisis_response_sequence = generate_crisis_response_sequence()
@@ -217,14 +225,6 @@ def new_session():
         print(f"❌ Error creating new session: {e}")
         return jsonify({"error": "Failed to create new session"}), 500
 
-@app.errorhandler(404)
-def not_found(error):
-    return jsonify({"error": "Endpoint not found"}), 404
-
-@app.errorhandler(500)
-def internal_error(error):
-    return jsonify({"error": "Internal server error"}), 500
-
 @app.route('/test-frontend', methods=['GET'])
 def test_frontend():
     import os
@@ -237,18 +237,24 @@ def test_frontend():
         "index_exists": os.path.exists(os.path.join(static_path, 'index.html'))
     })
 
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({"error": "Endpoint not found"}), 404
 
-# OPRAVENO pro Azure App Service
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({"error": "Internal server error"}), 500
+
+# Pro Azure App Service
 if __name__ == '__main__':
     print("=" * 80)
-    print("🩺 DR. SARAH CHEN - AI THERAPY PRACTICE (v2.2)")
+    print("🩺 DR. SARAH CHEN - AI THERAPY PRACTICE (v2.3)")
     print("=" * 80)
     print(f"🧠 AI Model: {MODEL_NAME}")
     print(f"🔗 Model Available: {'Yes' if model else 'No'}")
     print("🚨 Crisis Protocol: Enhanced Detection")
-    print("🌐 Starting Azure App Service...")
+    print("🌐 Starting Azure App Service with Frontend...")
     print("=" * 80)
     
-    # Pro Azure App Service - správný host a port
     port = int(os.environ.get('PORT', 8000))
     app.run(debug=False, host="0.0.0.0", port=port)
