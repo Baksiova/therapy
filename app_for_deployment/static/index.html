@@ -565,7 +565,7 @@
             const messageInput = document.getElementById('messageInput');
             const sendButton = document.getElementById('sendButton');
             try {
-                const response = await fetch(`${API_BASE_URL}/health`);
+                const response = await fetch(`${API_BASE_URL}/health`, { method: 'GET', credentials: 'include' });
                 if (response.ok) {
                     isConnected = true;
                     statusIndicator.textContent = 'Pripojené';
@@ -621,7 +621,7 @@
                         for (let i = 0; i < data.response_sequence.length; i++) {
                             const msg = data.response_sequence[i];
                             await new Promise(resolve => setTimeout(resolve, i === 0 ? 100 : 800));
-                            addMessage(msg.content, 'bot', msg.type);
+                            addMessage(msg.content, 'bot');
                         }
                     } else {
                         showError('Server vrátil prázdnu odpoveď.');
@@ -666,7 +666,7 @@
             setTimeout(() => { if (errorDiv.parentNode) errorDiv.remove(); }, 5000);
         }
 
-        function showTypingIndicator() { document.getElementById('typingIndicator').style.display = 'flex'; }
+        function showTypingIndicator() { document.getElementById('typingIndicator').style.display = 'flex'; document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;}
         function hideTypingIndicator() { document.getElementById('typingIndicator').style.display = 'none'; }
         
         async function startNewSession() {
