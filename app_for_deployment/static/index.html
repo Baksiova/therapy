@@ -229,8 +229,8 @@
         .nav-btn svg { width: 24px; height: 24px; fill: currentColor; }
         .nav-btn span { font-size: 11px; font-weight: 500; }
 
-        /* Breathing Exercise Overlay */
-        .breathing-overlay {
+        /* Generic Overlay styles */
+        .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95);
@@ -240,160 +240,7 @@
             z-index: 1000;
             backdrop-filter: blur(10px);
         }
-
-        .breathing-container {
-            text-align: center;
-            color: white;
-            max-width: 500px;
-            padding: 40px;
-            position: relative;
-        }
-
-        .breathing-circle {
-            width: 300px;
-            height: 300px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            margin: 0 auto 40px;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .breathing-inner-circle {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-            box-shadow: 0 0 30px rgba(109, 91, 186, 0.5);
-        }
-
-        .breathing-inner-circle.inhale {
-            transform: scale(3.5);
-        }
-
-        .breathing-inner-circle.hold {
-            transform: scale(3.5);
-        }
-
-        .breathing-inner-circle.exhale {
-            transform: scale(1);
-        }
-
-        .breathing-instructions {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 20px;
-            min-height: 60px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .breathing-counter {
-            font-size: 48px;
-            font-weight: 300;
-            margin-bottom: 20px;
-            opacity: 0.8;
-        }
-
-        .breathing-progress {
-            margin-bottom: 30px;
-        }
-
-        .breathing-progress-text {
-            font-size: 16px;
-            opacity: 0.7;
-            margin-bottom: 10px;
-        }
-
-        .breathing-progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-        }
-
-        .breathing-progress-fill {
-            height: 100%;
-            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
-            width: 0%;
-            transition: width 0.3s ease;
-        }
-
-        .breathing-controls {
-            display: flex;
-            gap: 20px;
-            justify-content: center;
-            margin-top: 30px;
-        }
-
-        .breathing-btn {
-            padding: 12px 24px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            background: transparent;
-            color: white;
-            border-radius: 25px;
-            cursor: pointer;
-            font-family: var(--font-family);
-            font-size: 14px;
-            transition: all 0.3s ease;
-        }
-
-        .breathing-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 255, 255, 0.5);
-        }
-
-        .breathing-btn.primary {
-            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
-            border-color: transparent;
-        }
-
-        .breathing-technique-selector {
-            margin-bottom: 30px;
-        }
-
-        .technique-buttons {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .technique-btn {
-            padding: 8px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.3);
-            background: transparent;
-            color: white;
-            border-radius: 20px;
-            cursor: pointer;
-            font-family: var(--font-family);
-            font-size: 12px;
-            transition: all 0.3s ease;
-        }
-
-        .technique-btn.active {
-            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
-            border-color: transparent;
-        }
-
-        /* Stress Tracking Overlay */
-        .stress-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.95);
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-
-        .stress-container {
+        .overlay-container {
             background: white;
             border-radius: var(--border-radius);
             padding: 40px;
@@ -403,266 +250,88 @@
             overflow-y: auto;
             position: relative;
         }
-
-        .stress-header {
+        .overlay-header {
             text-align: center;
             margin-bottom: 30px;
         }
+        .overlay-header h2 { color: var(--text-color-dark); font-size: 24px; margin-bottom: 10px; }
+        .overlay-header p { color: #666; font-size: 14px; }
+        .overlay-actions { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        .overlay-btn { padding: 12px 24px; border: none; border-radius: 25px; cursor: pointer; font-family: var(--font-family); font-size: 14px; font-weight: 500; transition: all 0.3s ease; }
+        .overlay-btn.primary { background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end)); color: white; }
+        .overlay-btn.primary:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(109, 91, 186, 0.3); }
+        .overlay-btn.secondary { background: #f5f5f5; color: var(--text-color-dark); border: 1px solid var(--border-color); }
+        .overlay-btn.secondary:hover { background: #e0e0e0; }
 
-        .stress-header h2 {
-            color: var(--text-color-dark);
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
+        /* Breathing Exercise Overlay */
+        .breathing-container { text-align: center; color: white; max-width: 500px; padding: 40px; position: relative; }
+        .breathing-circle { width: 300px; height: 300px; border: 3px solid rgba(255, 255, 255, 0.3); border-radius: 50%; margin: 0 auto 40px; position: relative; display: flex; align-items: center; justify-content: center; }
+        .breathing-inner-circle { width: 80px; height: 80px; background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end)); border-radius: 50%; transition: transform 0.3s ease; box-shadow: 0 0 30px rgba(109, 91, 186, 0.5); }
+        .breathing-inner-circle.inhale, .breathing-inner-circle.hold { transform: scale(3.5); }
+        .breathing-inner-circle.exhale { transform: scale(1); }
+        .breathing-instructions { font-size: 24px; font-weight: 600; margin-bottom: 20px; min-height: 60px; display: flex; align-items: center; justify-content: center; }
+        .breathing-counter { font-size: 48px; font-weight: 300; margin-bottom: 20px; opacity: 0.8; }
+        .breathing-progress { margin-bottom: 30px; }
+        .breathing-progress-text { font-size: 16px; opacity: 0.7; margin-bottom: 10px; }
+        .breathing-progress-bar { width: 100%; height: 4px; background: rgba(255, 255, 255, 0.2); border-radius: 2px; overflow: hidden; }
+        .breathing-progress-fill { height: 100%; background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end)); width: 0%; transition: width 0.3s ease; }
+        .breathing-controls { display: flex; gap: 20px; justify-content: center; margin-top: 30px; }
+        .breathing-btn { padding: 12px 24px; border: 2px solid rgba(255, 255, 255, 0.3); background: transparent; color: white; border-radius: 25px; cursor: pointer; font-family: var(--font-family); font-size: 14px; transition: all 0.3s ease; }
+        .breathing-btn:hover { background: rgba(255, 255, 255, 0.1); border-color: rgba(255, 255, 255, 0.5); }
+        .breathing-technique-selector { margin-bottom: 30px; }
+        .technique-buttons { display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; }
+        .technique-btn { padding: 8px 16px; border: 1px solid rgba(255, 255, 255, 0.3); background: transparent; color: white; border-radius: 20px; cursor: pointer; font-family: var(--font-family); font-size: 12px; transition: all 0.3s ease; }
+        .technique-btn.active { background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end)); border-color: transparent; }
 
-        .stress-header p {
-            color: #666;
-            font-size: 14px;
-        }
-
-        .stress-form {
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
-
-        .stress-question {
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .stress-question label {
-            font-weight: 600;
-            color: var(--text-color-dark);
-            font-size: 16px;
-        }
-
-        .stress-scale {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 10px;
-            margin: 10px 0;
-        }
-
-        .stress-scale-labels {
-            display: flex;
-            justify-content: space-between;
-            font-size: 12px;
-            color: #666;
-            margin-bottom: 5px;
-        }
-
-        .stress-number {
-            width: 40px;
-            height: 40px;
-            border: 2px solid var(--border-color);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            background: white;
-        }
-
-        .stress-number:hover {
-            border-color: var(--primary-color-start);
-            transform: scale(1.1);
-        }
-
-        .stress-number.selected {
-            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
-            color: white;
-            border-color: var(--primary-color-start);
-        }
-
-        .stress-textarea {
-            width: 100%;
-            padding: 15px;
-            border: 1px solid var(--border-color);
-            border-radius: 10px;
-            font-family: var(--font-family);
-            font-size: 14px;
-            resize: vertical;
-            min-height: 80px;
-            outline: none;
-            transition: border-color 0.3s ease;
-        }
-
-        .stress-textarea:focus {
-            border-color: var(--primary-color-start);
-            box-shadow: 0 0 0 3px rgba(109, 91, 186, 0.15);
-        }
-
-        .stress-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .stress-btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-family: var(--font-family);
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
-
-        .stress-btn.primary {
-            background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end));
-            color: white;
-        }
-
-        .stress-btn.primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(109, 91, 186, 0.3);
-        }
-
-        .stress-btn.secondary {
-            background: #f5f5f5;
-            color: var(--text-color-dark);
-            border: 1px solid var(--border-color);
-        }
-
-        .stress-btn.secondary:hover {
-            background: #e0e0e0;
-        }
-
+        /* PSS Assessment Styles */
+        #pssQuestionList { display: flex; flex-direction: column; gap: 25px; }
+        .pss-question { background: #f9f9f9; padding: 15px; border-radius: 10px; border-left: 4px solid var(--primary-color-start); }
+        .pss-question p { font-weight: 500; margin-bottom: 15px; color: var(--text-color-dark); }
+        .pss-scale { display: flex; flex-direction: column; gap: 8px; }
+        .pss-scale label { display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 8px; border-radius: 8px; transition: background-color 0.2s ease; }
+        .pss-scale label:hover { background-color: #efedfb; }
+        .pss-scale input[type="radio"] { accent-color: var(--primary-color-start); }
+        #pssResultContainer { text-align: center; padding: 20px; }
+        #pssResultScore { font-size: 48px; font-weight: 600; color: var(--primary-color-start); margin-bottom: 10px; }
+        #pssResultInterpretation { font-size: 18px; color: #555; }
+        
+        /* Stress Tracking Overlay */
+        .stress-form { display: flex; flex-direction: column; gap: 25px; }
+        .stress-question { display: flex; flex-direction: column; gap: 15px; }
+        .stress-question label { font-weight: 600; color: var(--text-color-dark); font-size: 16px; }
+        .stress-scale { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 10px 0; }
+        .stress-number { width: 40px; height: 40px; border: 2px solid var(--border-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: 600; transition: all 0.3s ease; background: white; }
+        .stress-number:hover { border-color: var(--primary-color-start); transform: scale(1.1); }
+        .stress-number.selected { background: linear-gradient(135deg, var(--primary-color-start), var(--primary-color-end)); color: white; border-color: var(--primary-color-start); }
+        .stress-textarea { width: 100%; padding: 15px; border: 1px solid var(--border-color); border-radius: 10px; font-family: var(--font-family); font-size: 14px; resize: vertical; min-height: 80px; outline: none; transition: border-color 0.3s ease; }
+        .stress-textarea:focus { border-color: var(--primary-color-start); box-shadow: 0 0 0 3px rgba(109, 91, 186, 0.15); }
+        
         /* Dashboard View */
-        .dashboard-view {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--secondary-bg);
-            display: none;
-            flex-direction: column;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-
-        .dashboard-view.active {
-            display: flex;
-            opacity: 1;
-            visibility: visible;
-        }
-
-        #dashboardView {
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .dashboard-header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .dashboard-header h2 {
-            color: var(--text-color-dark);
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        .dashboard-stats {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            text-align: center;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .stat-number {
-            font-size: 32px;
-            font-weight: 600;
-            color: var(--primary-color-start);
-            margin-bottom: 5px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .chart-container {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .chart-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-color-dark);
-            margin-bottom: 15px;
-        }
-
-        .chart-placeholder {
-            height: 200px;
-            background: linear-gradient(135deg, #f8f9ff 0%, #e8f0fe 100%);
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 14px;
-        }
-
-        .stress-history {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .history-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 10px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .history-item:last-child {
-            border-bottom: none;
-        }
-
-        .history-date {
-            font-size: 14px;
-            color: #666;
-        }
-
-        .history-score {
-            font-size: 16px;
-            font-weight: 600;
-            padding: 4px 12px;
-            border-radius: 20px;
-            color: white;
-        }
-
+        .dashboard-view { flex-direction: column; }
+        #dashboardView { padding: 20px; overflow-y: auto; }
+        .dashboard-header { text-align: center; margin-bottom: 30px; flex-shrink: 0; }
+        .dashboard-header h2 { color: var(--text-color-dark); font-size: 24px; margin-bottom: 10px; }
+        .dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px; margin-bottom: 30px; flex-shrink: 0; }
+        .stat-card { background: white; padding: 20px; border-radius: 12px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-number { font-size: 32px; font-weight: 600; color: var(--primary-color-start); margin-bottom: 5px; }
+        .stat-label { font-size: 14px; color: #666; }
+        .chart-container { background: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-shrink: 0; }
+        .chart-title { font-size: 18px; font-weight: 600; color: var(--text-color-dark); margin-bottom: 15px; }
+        .chart-placeholder { height: 200px; background: linear-gradient(135deg, #f8f9ff 0%, #e8f0fe 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; }
+        .stress-history { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); flex-shrink: 0; }
+        .history-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #f0f0f0; }
+        .history-item:last-child { border-bottom: none; }
+        .history-date { font-size: 14px; color: #666; }
+        .history-score { font-size: 16px; font-weight: 600; padding: 4px 12px; border-radius: 20px; color: white; }
         .history-score.low { background: #2ecc71; }
         .history-score.medium { background: #f39c12; }
         .history-score.high { background: #e74c3c; }
 
         @media (max-width: 768px) {
-            .stress-container { padding: 20px; }
+            .overlay-container, .breathing-container { padding: 20px; }
             .stress-scale { flex-wrap: wrap; gap: 8px; }
             .stress-number { width: 35px; height: 35px; font-size: 14px; }
-            .dashboard-stats { grid-template-columns: 1fr; }
+            .dashboard-stats { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
         }
     </style>
 </head>
@@ -691,12 +360,12 @@
                 </div>
                 <div class="typing-indicator" id="typingIndicator">
                     <div class="message-avatar">
-                        <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>
+                        <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>
                     </div>
                     <div class="typing-dots"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
                 </div>
                 <div class="chat-input-container">
-                    <form class="chat-input-form" onsubmit="sendMessage(event)">
+                    <form class="chat-input-form" id="chatForm">
                         <input type="text" class="chat-input" id="messageInput" placeholder="Napíšte svoju správu..." maxlength="500" autocomplete="off" disabled>
                         <button type="submit" class="send-button" id="sendButton" disabled>
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
@@ -706,28 +375,33 @@
             </div>
 
             <div id="toolsView" class="view">
-                <div class="tool-card" onclick="startBreathingExercise()">
+                 <div class="tool-card" onclick="startBreathingExercise()">
                     <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.2,19H12.8C13.9,19 14.8,18.1 14.8,17V15H9.2V17C9.2,18.1 10.1,19 11.2,19H11.8V19.5C11.8,19.8 12,20 12.3,20S12.8,19.8 12.8,19.5V19M19.7,9.8C19.4,9.5 19,9.3 18.5,9.3H15.3V6.8C15.3,6.3 14.8,5.9 14.3,5.9S13.3,6.3 13.3,6.8V9.3H10.8V4.8C10.8,4.3 10.3,3.9 9.8,3.9S8.8,4.3 8.8,4.8V9.3H5.5C5,9.3 4.6,9.5 4.3,9.8C4,10.1 3.9,10.6 4.1,11L8.1,14.3H15.9L19.9,11C20.1,10.6 20,10.1 19.7,9.8Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Hlboký nádych</h3><p>5-minútové cvičenie na okamžité upokojenie.</p></div>
+                    <div class="tool-card-content"><h3>Hlboký nádych</h3><p>Cvičenie na okamžité upokojenie.</p></div>
                 </div>
                 <div class="tool-card" onclick="startStressTracking()">
                     <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M14.5,9A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 14.5,12A1.5,1.5 0 0,1 13,10.5A1.5,1.5 0 0,1 14.5,9M9.5,9A1.5,1.5 0 0,1 11,10.5A1.5,1.5 0 0,1 9.5,12A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 9.5,9M12,17.23C10.25,17.23 8.71,16.5 7.81,15.42L9.23,14C9.68,14.72 10.75,15.23 12,15.23C13.25,15.23 14.32,14.72 14.77,14L16.19,15.42C15.29,16.5 13.75,17.23 12,17.23Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Denný Stress Tracker</h3><p>Hodnotenie stresu v práci + osobný dashboard trendov.</p></div>
+                    <div class="tool-card-content"><h3>Denný Stress Tracker</h3><p>Rýchle denné hodnotenie stresu a spánku.</p></div>
                 </div>
-                 <div class="tool-card" onclick="alert('Spúšťam meditáciu...')">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21,12C21,16.97 16.97,21 12,21C7.03,21 3,16.97 3,12C3,7.03 7.03,3 12,3C12.54,3 13.07,3.05 13.58,3.14L12,7L10.42,3.14C10.93,3.05 11.46,3 12,3M12,19C15.87,19 19,15.87 19,12C19,8.13 15.87,5 12,5C8.13,5 5,8.13 5,12C5,15.87 8.13,19 12,19M8.5,12.5L12,6L15.5,12.5H8.5M15.5,14.5L12,18L8.5,14.5H15.5Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Skenovanie tela</h3><p>10-minútová riadená meditácia na uvoľnenie.</p></div>
+                <div class="tool-card" onclick="openPssAssessment()">
+                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,3H5C3.89,3 3,3.89 3,5V19C3,20.11 3.9,21 5,21H19C20.11,21 21,20.11 21,19V5C21,3.89 20.11,3 19,3M19,5V19H5V5H19M17,17H7V15H17V17M17,13H7V11H17V13M17,9H7V7H17V9Z" /></svg></div>
+                    <div class="tool-card-content"><h3>Mesačné hodnotenie (PSS-10)</h3><p>Validovaný dotazník na hĺbkovú analýzu stresu.</p></div>
                 </div>
             </div>
+
+            <div id="dashboardView" class="view dashboard-view">
                 <div class="dashboard-header">
                     <h2>📊 Váš Stress Dashboard</h2>
                     <p>Prehľad vašich stress trendov a wellbeing metrík</p>
                 </div>
-
                 <div class="dashboard-stats">
                     <div class="stat-card">
                         <div class="stat-number" id="avgStressLevel">-</div>
-                        <div class="stat-label">Priemerný stress (7 dní)</div>
+                        <div class="stat-label">Priem. stress (7d)</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="lastPssScore">-</div>
+                        <div class="stat-label">Posledné PSS skóre</div>
                     </div>
                     <div class="stat-card">
                         <div class="stat-number" id="totalEntries">0</div>
@@ -737,19 +411,13 @@
                         <div class="stat-number" id="streakDays">0</div>
                         <div class="stat-label">Dni v rade</div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number" id="trendIndicator">📈</div>
-                        <div class="stat-label">Trend týždeň</div>
-                    </div>
                 </div>
-
                 <div class="chart-container">
                     <div class="chart-title">Stress Level Trendy (Posledných 30 dní)</div>
                     <div class="chart-placeholder" id="stressChart">
                         📈 Graf stress trendov sa zobrazí po prvých záznamoch
                     </div>
                 </div>
-
                 <div class="stress-history">
                     <h3 class="chart-title">Nedávne záznamy</h3>
                     <div id="stressHistoryList">
@@ -758,23 +426,9 @@
                         </div>
                     </div>
                 </div>
-
-                <div class="stress-actions" style="margin-top: 20px;">
-                    <button class="stress-btn primary" onclick="startStressTracking()">+ Nový záznam</button>
-                    <button class="stress-btn secondary" onclick="exportStressData()">📊 Export dát</button>
-                </div>
-            </div>
-                <div class="tool-card" onclick="startBreathingExercise()">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.2,19H12.8C13.9,19 14.8,18.1 14.8,17V15H9.2V17C9.2,18.1 10.1,19 11.2,19H11.8V19.5C11.8,19.8 12,20 12.3,20S12.8,19.8 12.8,19.5V19M19.7,9.8C19.4,9.5 19,9.3 18.5,9.3H15.3V6.8C15.3,6.3 14.8,5.9 14.3,5.9S13.3,6.3 13.3,6.8V9.3H10.8V4.8C10.8,4.3 10.3,3.9 9.8,3.9S8.8,4.3 8.8,4.8V9.3H5.5C5,9.3 4.6,9.5 4.3,9.8C4,10.1 3.9,10.6 4.1,11L8.1,14.3H15.9L19.9,11C20.1,10.6 20,10.1 19.7,9.8Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Hlboký nádych</h3><p>5-minútové cvičenie na okamžité upokojenie.</p></div>
-                </div>
-                <div class="tool-card" onclick="startStressTracking()">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M14.5,9A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 14.5,12A1.5,1.5 0 0,1 13,10.5A1.5,1.5 0 0,1 14.5,9M9.5,9A1.5,1.5 0 0,1 11,10.5A1.5,1.5 0 0,1 9.5,12A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 9.5,9M12,17.23C10.25,17.23 8.71,16.5 7.81,15.42L9.23,14C9.68,14.72 10.75,15.23 12,15.23C13.25,15.23 14.32,14.72 14.77,14L16.19,15.42C15.29,16.5 13.75,17.23 12,17.23Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Denný Stress Tracker</h3><p>Hodnotenie stresu v práci + osobný dashboard trendov.</p></div>
-                </div>
-                 <div class="tool-card" onclick="alert('Spúšťam meditáciu...')">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M21,12C21,16.97 16.97,21 12,21C7.03,21 3,16.97 3,12C3,7.03 7.03,3 12,3C12.54,3 13.07,3.05 13.58,3.14L12,7L10.42,3.14C10.93,3.05 11.46,3 12,3M12,19C15.87,19 19,15.87 19,12C19,8.13 15.87,5 12,5C8.13,5 5,8.13 5,12C5,15.87 8.13,19 12,19M8.5,12.5L12,6L15.5,12.5H8.5M15.5,14.5L12,18L8.5,14.5H15.5Z" /></svg></div>
-                    <div class="tool-card-content"><h3>Skenovanie tela</h3><p>10-minútová riadená meditácia na uvoľnenie.</p></div>
+                <div class="overlay-actions" style="margin-top: 20px;">
+                    <button class="overlay-btn primary" onclick="startStressTracking()">+ Nový denný záznam</button>
+                    <button class="overlay-btn secondary" onclick="exportStressData()">📊 Export dát</button>
                 </div>
             </div>
         </main>
@@ -795,73 +449,8 @@
         </nav>
     </div>
 
-    <!-- Stress Tracking Overlay -->
-    <div class="stress-overlay" id="stressOverlay">
-        <div class="stress-container">
-            <div class="stress-header">
-                <h2>📊 Denné hodnotenie stresu</h2>
-                <p>Ako ste sa dnes cítili v práci? Vaše odpovede sú anonymné a pomôžu zlepšiť pracovné prostredie.</p>
-            </div>
-
-            <form class="stress-form" id="stressForm">
-                <div class="stress-question">
-                    <label>1. Aká bola vaša celková úroveň stresu dnes v práci?</label>
-                    <div class="stress-scale-labels">
-                        <span>Žiadny stress</span>
-                        <span>Extrémny stress</span>
-                    </div>
-                    <div class="stress-scale" id="stressScale">
-                        <div class="stress-number" data-value="1">1</div>
-                        <div class="stress-number" data-value="2">2</div>
-                        <div class="stress-number" data-value="3">3</div>
-                        <div class="stress-number" data-value="4">4</div>
-                        <div class="stress-number" data-value="5">5</div>
-                        <div class="stress-number" data-value="6">6</div>
-                        <div class="stress-number" data-value="7">7</div>
-                        <div class="stress-number" data-value="8">8</div>
-                        <div class="stress-number" data-value="9">9</div>
-                        <div class="stress-number" data-value="10">10</div>
-                    </div>
-                </div>
-
-                <div class="stress-question">
-                    <label>2. Aká bola vaša produktivita dnes? (voliteľné)</label>
-                    <div class="stress-scale-labels">
-                        <span>Veľmi nízka</span>
-                        <span>Veľmi vysoká</span>
-                    </div>
-                    <div class="stress-scale" id="productivityScale">
-                        <div class="stress-number" data-value="1">1</div>
-                        <div class="stress-number" data-value="2">2</div>
-                        <div class="stress-number" data-value="3">3</div>
-                        <div class="stress-number" data-value="4">4</div>
-                        <div class="stress-number" data-value="5">5</div>
-                        <div class="stress-number" data-value="6">6</div>
-                        <div class="stress-number" data-value="7">7</div>
-                        <div class="stress-number" data-value="8">8</div>
-                        <div class="stress-number" data-value="9">9</div>
-                        <div class="stress-number" data-value="10">10</div>
-                    </div>
-                </div>
-
-                <div class="stress-question">
-                    <label>3. Čo vám dnes spôsobilo najviac stresu? (voliteľné)</label>
-                    <textarea class="stress-textarea" id="stressSource" placeholder="Napríklad: Príliš veľa úloh, nevyhnutné deadlines, konflikty v tíme, technické problémy..."></textarea>
-                </div>
-
-                <div class="stress-question">
-                    <label>4. Čo by vám pomohlo znížiť stress? (voliteľné)</label>
-                    <textarea class="stress-textarea" id="stressHelp" placeholder="Napríklad: Viac času na úlohy, lepšia komunikácia, pauzy, podpora od managementu..."></textarea>
-                </div>
-
-                <div class="stress-actions">
-                    <button type="button" class="stress-btn secondary" onclick="closeStressTracking()">Zrušiť</button>
-                    <button type="submit" class="stress-btn primary">Uložiť záznam</button>
-                </div>
-            </form>
-        </div>
-    </div>
-    <div class="breathing-overlay" id="breathingOverlay">
+    <!-- Breathing Exercise Overlay -->
+    <div class="overlay" id="breathingOverlay">
         <div class="breathing-container">
             <div class="breathing-technique-selector">
                 <div class="technique-buttons">
@@ -897,361 +486,131 @@
             </div>
         </div>
     </div>
+    
+    <!-- PSS Assessment Overlay -->
+    <div class="overlay" id="pssOverlay">
+        <div class="overlay-container">
+            <div class="overlay-header">
+                <h2>Mesačné hodnotenie stresu (PSS-10)</h2>
+                <p>Nasledujúce otázky sa týkajú vašich pocitov a myšlienok za <b>posledný mesiac</b>.</p>
+            </div>
+            <form id="pssForm">
+                <div id="pssQuestionList">
+                    <!-- Questions will be generated by JS -->
+                </div>
+                <div id="pssResultContainer" style="display: none;">
+                    <p>Vaše celkové skóre vnímaného stresu je:</p>
+                    <div id="pssResultScore"></div>
+                    <p id="pssResultInterpretation"></p>
+                    <div class="overlay-actions">
+                        <button type="button" class="overlay-btn primary" onclick="closePssAssessment()">Zavrieť</button>
+                    </div>
+                </div>
+                <div class="overlay-actions" id="pssFormActions">
+                    <button type="button" class="overlay-btn secondary" onclick="closePssAssessment()">Zrušiť</button>
+                    <button type="submit" class="overlay-btn primary">Uložiť a zobraziť výsledok</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <!-- Stress Tracking Overlay -->
+    <div class="overlay" id="stressOverlay">
+        <div class="overlay-container">
+            <div class="overlay-header">
+                <h2>📊 Denné hodnotenie</h2>
+                <p>Ako ste sa dnes cítili? Tieto rýchle otázky vám pomôžu sledovať denné trendy.</p>
+            </div>
+
+            <form class="stress-form" id="stressForm">
+                <div class="stress-question">
+                    <label>1. Aká bola vaša celková úroveň stresu dnes v práci? (1 = žiadny, 10 = extrémny)</label>
+                    <div class="stress-scale" id="stressScale">
+                         <!-- Numbers 1-10 generated by JS -->
+                    </div>
+                </div>
+                <div class="stress-question">
+                    <label>2. Aká bola kvalita vášho spánku minulú noc? (1 = veľmi zlá, 5 = vynikajúca)</label>
+                    <div class="stress-scale" id="sleepScale">
+                         <!-- Numbers 1-5 generated by JS -->
+                    </div>
+                </div>
+                <div class="stress-question">
+                    <label>3. Poznámky pre seba (voliteľné)</label>
+                    <textarea class="stress-textarea" id="stressSource" placeholder="Čo vám dnes spôsobilo stres alebo naopak, potešilo vás?"></textarea>
+                </div>
+
+                <div class="overlay-actions">
+                    <button type="button" class="overlay-btn secondary" onclick="closeStressTracking()">Zrušiť</button>
+                    <button type="submit" class="overlay-btn primary">Uložiť záznam</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
     <script>
-        const API_BASE_URL = 'https://asisterapie-bcbqhaawdqduavgq.westeurope-01.azurewebsites.net';
+        // --- Global Variables & Constants ---
+        const API_BASE_URL = ''; // Použije relatívnu cestu, keďže FE a BE bežia na rovnakej doméne
         const CHECK_CONNECTION_INTERVAL = 30000;
         let isConnected = false;
         let connectionCheckInterval;
-        const chatMessages = document.getElementById('chatMessages');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const typingIndicator = document.getElementById('typingIndicator');
-        const statusIndicator = document.getElementById('statusIndicator');
-        const botAvatarSVG = `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>`;
-        const userAvatarSVG = `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12A10,10,0,0,0,12,22A10,10,0,0,0,22,12A10,10,0,0,0,12,2ZM12,6a3,3,0,1,1-3,3A3,3,0,0,1,12,6Zm0,14a7,7,0,0,1-7-7c0-2.39,1.95-4.36,4.36-4.36h5.28C17.05,8.64,19,10.61,19,13A7,7,0,0,1,12,20Z"/></svg>`;
-        
-        // Stress Tracking Variables
+
         let stressData = [];
         let selectedStressLevel = null;
-        let selectedProductivityLevel = null;
-
-        // Load stress data from localStorage
-        function loadStressData() {
-            try {
-                const saved = localStorage.getItem('stressTrackingData');
-                if (saved) {
-                    stressData = JSON.parse(saved);
-                }
-            } catch (error) {
-                console.error('Error loading stress data:', error);
-                stressData = [];
-            }
-        }
-
-        // Save stress data to localStorage
-        function saveStressData() {
-            try {
-                localStorage.setItem('stressTrackingData', JSON.stringify(stressData));
-            } catch (error) {
-                console.error('Error saving stress data:', error);
-            }
-        }
-
-        // Stress Tracking Functions
-        function startStressTracking() {
-            document.getElementById('stressOverlay').style.display = 'flex';
-            resetStressForm();
-        }
-
-        function closeStressTracking() {
-            document.getElementById('stressOverlay').style.display = 'none';
-            resetStressForm();
-        }
-
-        function resetStressForm() {
-            selectedStressLevel = null;
-            selectedProductivityLevel = null;
-            
-            // Reset all scale selections
-            document.querySelectorAll('.stress-number').forEach(num => {
-                num.classList.remove('selected');
-            });
-            
-            // Clear textareas
-            document.getElementById('stressSource').value = '';
-            document.getElementById('stressHelp').value = '';
-        }
-
-        // Handle scale selections
-        function setupStressScales() {
-            // Stress level scale
-            document.getElementById('stressScale').addEventListener('click', function(e) {
-                if (e.target.classList.contains('stress-number')) {
-                    // Remove previous selection in this scale
-                    this.querySelectorAll('.stress-number').forEach(num => {
-                        num.classList.remove('selected');
-                    });
-                    
-                    // Add selection to clicked number
-                    e.target.classList.add('selected');
-                    selectedStressLevel = parseInt(e.target.dataset.value);
-                }
-            });
-
-            // Productivity scale
-            document.getElementById('productivityScale').addEventListener('click', function(e) {
-                if (e.target.classList.contains('stress-number')) {
-                    // Remove previous selection in this scale
-                    this.querySelectorAll('.stress-number').forEach(num => {
-                        num.classList.remove('selected');
-                    });
-                    
-                    // Add selection to clicked number
-                    e.target.classList.add('selected');
-                    selectedProductivityLevel = parseInt(e.target.dataset.value);
-                }
-            });
-        }
-
-        // Handle form submission
-        function setupStressForm() {
-            document.getElementById('stressForm').addEventListener('submit', function(e) {
-                e.preventDefault();
-                
-                if (selectedStressLevel === null) {
-                    alert('Prosím, vyberte úroveň stresu (1-10).');
-                    return;
-                }
-
-                const stressEntry = {
-                    date: new Date().toISOString(),
-                    dateStr: new Date().toLocaleDateString('sk-SK'),
-                    stressLevel: selectedStressLevel,
-                    productivityLevel: selectedProductivityLevel,
-                    stressSource: document.getElementById('stressSource').value.trim(),
-                    stressHelp: document.getElementById('stressHelp').value.trim(),
-                    timestamp: Date.now()
-                };
-
-                stressData.unshift(stressEntry); // Add to beginning
-                saveStressData();
-                updateDashboard();
-                closeStressTracking();
-                
-                // Show success message
-                setTimeout(() => {
-                    alert('✅ Stress záznam bol úspešne uložený! Pozrite si svoj dashboard pre trendy.');
-                }, 300);
-            });
-        }
-
-        // Update dashboard with current data
-        function updateDashboard() {
-            if (stressData.length === 0) {
-                return;
-            }
-
-            // Calculate statistics
-            const last7Days = stressData.filter(entry => {
-                const entryDate = new Date(entry.date);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return entryDate >= weekAgo;
-            });
-
-            const avgStress = last7Days.length > 0 
-                ? (last7Days.reduce((sum, entry) => sum + entry.stressLevel, 0) / last7Days.length).toFixed(1)
-                : '-';
-
-            // Calculate streak (consecutive days with entries)
-            let streak = 0;
-            const today = new Date();
-            for (let i = 0; i < 30; i++) {
-                const checkDate = new Date(today);
-                checkDate.setDate(today.getDate() - i);
-                const dateStr = checkDate.toLocaleDateString('sk-SK');
-                
-                const hasEntry = stressData.some(entry => entry.dateStr === dateStr);
-                if (hasEntry) {
-                    streak++;
-                } else {
-                    break;
-                }
-            }
-
-            // Calculate trend
-            const thisWeek = last7Days.slice(0, 3); // Last 3 days
-            const lastWeek = stressData.filter(entry => {
-                const entryDate = new Date(entry.date);
-                const twoWeeksAgo = new Date();
-                twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-                const weekAgo = new Date();
-                weekAgo.setDate(weekAgo.getDate() - 7);
-                return entryDate >= twoWeeksAgo && entryDate < weekAgo;
-            }).slice(0, 3);
-
-            let trendIndicator = '➡️';
-            if (thisWeek.length > 0 && lastWeek.length > 0) {
-                const thisWeekAvg = thisWeek.reduce((sum, entry) => sum + entry.stressLevel, 0) / thisWeek.length;
-                const lastWeekAvg = lastWeek.reduce((sum, entry) => sum + entry.stressLevel, 0) / lastWeek.length;
-                
-                if (thisWeekAvg < lastWeekAvg - 0.5) {
-                    trendIndicator = '📉'; // Improving
-                } else if (thisWeekAvg > lastWeekAvg + 0.5) {
-                    trendIndicator = '📈'; // Worsening
-                }
-            }
-
-            // Update dashboard stats
-            document.getElementById('avgStressLevel').textContent = avgStress;
-            document.getElementById('totalEntries').textContent = stressData.length;
-            document.getElementById('streakDays').textContent = streak;
-            document.getElementById('trendIndicator').textContent = trendIndicator;
-
-            // Update history list
-            updateStressHistory();
-            
-            // Update chart placeholder with simple trend info
-            updateChartPlaceholder();
-        }
-
-        function updateStressHistory() {
-            const historyList = document.getElementById('stressHistoryList');
-            const recentEntries = stressData.slice(0, 10); // Last 10 entries
-
-            if (recentEntries.length === 0) {
-                historyList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Zatiaľ žiadne záznamy. Začnite sledovať svoj stress!</div>';
-                return;
-            }
-
-            historyList.innerHTML = recentEntries.map(entry => {
-                let scoreClass = 'low';
-                if (entry.stressLevel >= 7) scoreClass = 'high';
-                else if (entry.stressLevel >= 4) scoreClass = 'medium';
-
-                return `
-                    <div class="history-item">
-                        <div>
-                            <div class="history-date">${entry.dateStr}</div>
-                            ${entry.stressSource ? `<div style="font-size: 12px; color: #999; margin-top: 2px;">${entry.stressSource.substring(0, 50)}${entry.stressSource.length > 50 ? '...' : ''}</div>` : ''}
-                        </div>
-                        <div class="history-score ${scoreClass}">${entry.stressLevel}/10</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function updateChartPlaceholder() {
-            const chartPlaceholder = document.getElementById('stressChart');
-            
-            if (stressData.length < 3) {
-                chartPlaceholder.textContent = `📈 Graf stress trendov sa zobrazí po ${3 - stressData.length} ďalších záznamoch`;
-                return;
-            }
-
-            // Simple trend visualization
-            const last30Days = stressData.slice(0, 30);
-            const avgStress = (last30Days.reduce((sum, entry) => sum + entry.stressLevel, 0) / last30Days.length).toFixed(1);
-            
-            chartPlaceholder.innerHTML = `
-                <div style="text-align: center; padding: 40px;">
-                    <div style="font-size: 48px; color: var(--primary-color-start); margin-bottom: 10px;">${avgStress}</div>
-                    <div style="font-size: 16px; color: #666; margin-bottom: 20px;">Priemerný stress (30 dní)</div>
-                    <div style="font-size: 14px; color: #999;">
-                        ${last30Days.length} záznamov • 
-                        Min: ${Math.min(...last30Days.map(e => e.stressLevel))} • 
-                        Max: ${Math.max(...last30Days.map(e => e.stressLevel))}
-                    </div>
-                </div>
-            `;
-        }
-
-        // Export stress data as CSV
-        function exportStressData() {
-            if (stressData.length === 0) {
-                alert('Žiadne dáta na export. Začnite sledovať svoj stress!');
-                return;
-            }
-
-            // Create CSV content
-            const headers = ['Dátum', 'Stress Level (1-10)', 'Produktivita (1-10)', 'Zdroj stresu', 'Pomoc pri strese'];
-            const csvContent = [
-                headers.join(','),
-                ...stressData.map(entry => [
-                    `"${entry.dateStr}"`,
-                    entry.stressLevel,
-                    entry.productivityLevel || '',
-                    `"${entry.stressSource.replace(/"/g, '""')}"`,
-                    `"${entry.stressHelp.replace(/"/g, '""')}"`
-                ].join(','))
-            ].join('\n');
-
-            // Create and download file
-            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-            const link = document.createElement('a');
-            const url = URL.createObjectURL(blob);
-            link.setAttribute('href', url);
-            link.setAttribute('download', `stress_tracking_${new Date().toISOString().split('T')[0]}.csv`);
-            link.style.visibility = 'hidden';
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
-
-            alert('📊 Stress dáta boli exportované ako CSV súbor!');
-        }
-        let breathingInterval;
-        let breathingCurrentCycle = 0;
-        let breathingTotalCycles = 5;
-        let breathingTechnique = '478';
-        let breathingPhase = 'ready'; // ready, inhale, hold, exhale
-        let breathingPhaseTime = 0;
-        let breathingIsRunning = false;
-        let breathingIsPaused = false;
-
-        // Breathing techniques configuration
-        const breathingTechniques = {
-            '478': {
-                name: '4-7-8 Dýchanie',
-                phases: [
-                    { name: 'inhale', duration: 4, instruction: 'Vdýchnite nosom' },
-                    { name: 'hold', duration: 7, instruction: 'Zadržte dych' },
-                    { name: 'exhale', duration: 8, instruction: 'Vydýchnite ústami' }
-                ]
-            },
-            'box': {
-                name: 'Box Dýchanie',
-                phases: [
-                    { name: 'inhale', duration: 4, instruction: 'Vdýchnite' },
-                    { name: 'hold', duration: 4, instruction: 'Zadržte dych' },
-                    { name: 'exhale', duration: 4, instruction: 'Vydýchnite' },
-                    { name: 'hold', duration: 4, instruction: 'Zadržte dych' }
-                ]
-            },
-            'simple': {
-                name: 'Hlboké Dýchanie',
-                phases: [
-                    { name: 'inhale', duration: 6, instruction: 'Hlboko sa nadýchnite' },
-                    { name: 'exhale', duration: 6, instruction: 'Pomaly vydýchnite' }
-                ]
-            }
-        };
-
+        let selectedSleepLevel = null;
+        
+        // --- Chat & Server Communication ---
         async function checkConnection() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
             try {
-                const response = await fetch(`${API_BASE_URL}/health`, { method: 'GET', credentials: 'include' });
+                const response = await fetch(`${API_BASE_URL}/health`);
                 if (response.ok) {
                     isConnected = true;
                     statusIndicator.textContent = 'Pripojené';
                     statusIndicator.className = 'status-indicator connected';
-                    messageInput.disabled = false; sendButton.disabled = false;
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
                     messageInput.placeholder = 'Napíšte svoju správu...';
-                } else { throw new Error(`Server responded with status: ${response.status}`); }
+                } else {
+                    throw new Error('Server not healthy');
+                }
             } catch (error) {
                 isConnected = false;
-                statusIndicator.textContent = 'Odpojené'; statusIndicator.className = 'status-indicator disconnected';
-                messageInput.disabled = true; sendButton.disabled = true;
-                messageInput.placeholder = 'Server nie je dostupný...';
+                statusIndicator.textContent = 'Odpojené';
+                statusIndicator.className = 'status-indicator disconnected';
+                if(messageInput) {
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+                    messageInput.placeholder = 'Server nie je dostupný...';
+                }
             }
         }
 
         async function sendMessage(event) {
             event.preventDefault();
+            const messageInput = document.getElementById('messageInput');
             const message = messageInput.value.trim();
             if (!message || messageInput.disabled) return;
-            if (!isConnected) { showError('Nie je možné pripojiť sa k serveru. Skúšame znova...'); checkConnection(); return; }
+            if (!isConnected) {
+                showError('Nie je možné pripojiť sa k serveru. Skúšame znova...');
+                checkConnection();
+                return;
+            }
             
             addMessage(message, 'user');
             messageInput.value = '';
-            sendButton.disabled = true; messageInput.disabled = true;
+            document.getElementById('sendButton').disabled = true;
+            messageInput.disabled = true;
             showTypingIndicator();
 
             try {
-                const response = await fetch(`${API_BASE_URL}/chat`, { 
-                    method: 'POST', 
-                    headers: { 'Content-Type': 'application/json' }, 
-                    credentials: 'include', 
-                    body: JSON.stringify({ message: message }) 
+                const response = await fetch(`${API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ message: message })
                 });
                 const data = await response.json();
 
@@ -1267,8 +626,8 @@
                     } else {
                         showError('Server vrátil prázdnu odpoveď.');
                     }
-                } else { 
-                    throw new Error(data.error || 'Nepodarilo sa získať odpoveď zo servera'); 
+                } else {
+                    throw new Error(data.error || 'Nepodarilo sa získať odpoveď zo servera');
                 }
             } catch (error) {
                 console.error('Error sending message:', error);
@@ -1276,98 +635,91 @@
                 await checkConnection();
             } finally {
                 hideTypingIndicator();
-                if (isConnected) { 
-                    sendButton.disabled = false; 
-                    messageInput.disabled = false; 
-                    messageInput.focus(); 
+                if (isConnected) {
+                    document.getElementById('sendButton').disabled = false;
+                    messageInput.disabled = false;
+                    messageInput.focus();
                 }
             }
         }
 
-        function addMessage(content, sender, type = 'standard') {
+        function addMessage(content, sender) {
+            const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${sender}`;
+            const avatarSVG = sender === 'user'
+                ? `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12A10,10,0,0,0,12,22A10,10,0,0,0,22,12A10,10,0,0,0,12,2ZM12,6a3,3,0,1,1-3,3A3,3,0,0,1,12,6Zm0,14a7,7,0,0,1-7-7c0-2.39,1.95-4.36,4.36-4.36h5.28C17.05,8.64,19,10.61,19,13A7,7,0,0,1,12,20Z"/></svg>`
+                : `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>`;
             
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.innerHTML = sender === 'user' ? userAvatarSVG : botAvatarSVG;
-            
-            const messageContent = document.createElement('div');
-            messageContent.className = 'message-content';
-            messageContent.textContent = content;
-            
-            messageDiv.appendChild(avatar);
-            messageDiv.appendChild(messageContent);
-            
-            if (sender === 'user') { 
-                messageDiv.style.flexDirection = 'row-reverse'; 
-            }
-            
+            messageDiv.innerHTML = `<div class="message-avatar">${avatarSVG}</div><div class="message-content">${content}</div>`;
             chatMessages.appendChild(messageDiv);
-            scrollToBottom();
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function showError(message) {
-            const existingError = chatMessages.querySelector('.error-message');
-            if (existingError) existingError.remove();
+            const chatMessages = document.getElementById('chatMessages');
             const errorDiv = document.createElement('div');
             errorDiv.className = 'error-message';
             errorDiv.textContent = `❌ ${message}`;
             chatMessages.appendChild(errorDiv);
-            scrollToBottom();
-            setTimeout(() => { if (errorDiv.parentNode) { errorDiv.remove(); } }, 5000);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            setTimeout(() => { if (errorDiv.parentNode) errorDiv.remove(); }, 5000);
         }
 
+        function showTypingIndicator() { document.getElementById('typingIndicator').style.display = 'flex'; }
+        function hideTypingIndicator() { document.getElementById('typingIndicator').style.display = 'none'; }
+        
         async function startNewSession() {
-            if (!isConnected) { showError('Nie je možné pripojiť sa k serveru.'); checkConnection(); return; }
+            if (!isConnected) return showError('Nie je možné pripojiť sa k serveru.');
+            if (!confirm('Naozaj chcete začať novú konverzáciu?')) return;
             try {
                 const response = await fetch(`${API_BASE_URL}/new-session`, { method: 'POST', credentials: 'include' });
                 if (response.ok) {
-                    const welcomeMessage = chatMessages.querySelector('.welcome-message');
-                    const firstBotMessage = chatMessages.querySelector('.message.bot:first-of-type');
-                    chatMessages.innerHTML = '';
-                    if (welcomeMessage) chatMessages.appendChild(welcomeMessage);
-                    if (firstBotMessage) { chatMessages.appendChild(firstBotMessage.cloneNode(true)); }
+                    document.getElementById('chatMessages').innerHTML = `<div class="welcome-message">Vitajte. Všetko, čo tu zdieľate, je dôverné.</div><div class="message bot"><div class="message-avatar"><svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg></div><div class="message-content">Dobrý deň! Som tu, aby som vás počúval a podporil. Ako sa dnes cítite?</div></div>`;
                     addMessage('Nová konverzácia bola spustená. Som pripravený počúvať.', 'bot');
-                } else { 
-                    const data = await response.json(); 
-                    throw new Error(data.error || 'Nepodarilo sa začať novú konverzáciu'); 
+                } else {
+                    throw new Error('Nepodarilo sa začať novú konverzáciu');
                 }
-            } catch (error) { 
-                console.error('Error starting new session:', error); 
-                showError('Nepodarilo sa začať novú konverzáciu. Skúste to znova.'); 
+            } catch (error) {
+                showError(error.message);
             }
         }
+        
+        // --- Breathing Exercise ---
+        let breathingInterval;
+        let breathingCurrentCycle = 0;
+        let breathingTotalCycles = 5;
+        let breathingTechnique = '478';
+        let breathingPhase = 'ready'; // ready, countdown, inhale, hold, exhale
+        let breathingPhaseTime = 0;
+        let breathingIsRunning = false;
+        let breathingIsPaused = false;
+        const breathingTechniques = {
+            '478': { name: '4-7-8 Dýchanie', phases: [{ name: 'inhale', duration: 4, instruction: 'Vdýchnite nosom' }, { name: 'hold', duration: 7, instruction: 'Zadržte dych' }, { name: 'exhale', duration: 8, instruction: 'Vydýchnite ústami' }] },
+            'box': { name: 'Box Dýchanie', phases: [{ name: 'inhale', duration: 4, instruction: 'Vdýchnite' }, { name: 'hold', duration: 4, instruction: 'Zadržte dych' }, { name: 'exhale', duration: 4, instruction: 'Vydýchnite' }, { name: 'hold', duration: 4, instruction: 'Zadržte dych' }] },
+            'simple': { name: 'Hlboké Dýchanie', phases: [{ name: 'inhale', duration: 6, instruction: 'Hlboko sa nadýchnite' }, { name: 'exhale', duration: 6, instruction: 'Pomaly vydýchnite' }] }
+        };
 
-        // Breathing Exercise Functions
         function startBreathingExercise() {
             document.getElementById('breathingOverlay').style.display = 'flex';
             resetBreathingExercise();
         }
 
         function closeBreathingExercise() {
+            if (breathingInterval) clearInterval(breathingInterval);
+            breathingInterval = null;
             document.getElementById('breathingOverlay').style.display = 'none';
-            if (breathingInterval) {
-                clearInterval(breathingInterval);
-                breathingInterval = null;
-            }
-            resetBreathingExercise();
         }
 
         function resetBreathingExercise() {
-            breathingCurrentCycle = 0;
-            breathingPhase = 'ready';
-            breathingPhaseTime = 0;
+            if(breathingInterval) clearInterval(breathingInterval);
             breathingIsRunning = false;
             breathingIsPaused = false;
-            
-            document.getElementById('breathingCircle').className = 'breathing-inner-circle';
-            document.getElementById('breathingInstructions').textContent = 'Pripravte sa na začiatok cvičenia...';
-            document.getElementById('breathingCounter').textContent = '3';
-            document.getElementById('breathingProgressText').textContent = 'Cyklus 1 z 5';
-            document.getElementById('breathingProgressFill').style.width = '0%';
+            breathingCurrentCycle = 0;
+            updateBreathingDisplay('ready', 3);
             document.getElementById('startBreathingBtn').style.display = 'inline-block';
             document.getElementById('pauseBreathingBtn').style.display = 'none';
+            document.getElementById('startBreathingBtn').textContent = 'Začať';
         }
 
         function startBreathingCycle() {
@@ -1375,131 +727,331 @@
             
             breathingIsRunning = true;
             breathingIsPaused = false;
-            breathingCurrentCycle = 0;
-            breathingPhase = 'countdown';
-            breathingPhaseTime = 3;
-            
             document.getElementById('startBreathingBtn').style.display = 'none';
             document.getElementById('pauseBreathingBtn').style.display = 'inline-block';
+            document.getElementById('pauseBreathingBtn').textContent = 'Pauza';
             
-            startCountdown();
-        }
-
-        function startCountdown() {
-            document.getElementById('breathingInstructions').textContent = 'Pripravte sa...';
-            
+            let countdown = 3;
+            updateBreathingDisplay('countdown', countdown);
             const countdownInterval = setInterval(() => {
-                document.getElementById('breathingCounter').textContent = breathingPhaseTime;
-                breathingPhaseTime--;
-                
-                if (breathingPhaseTime < 0) {
+                countdown--;
+                updateBreathingDisplay('countdown', countdown);
+                if (countdown <= 0) {
                     clearInterval(countdownInterval);
                     startBreathingPhases();
                 }
             }, 1000);
         }
+        
+        function startBreathingPhases(isResuming = false) {
+            let currentPhaseIndex;
+            if (!isResuming) {
+                breathingCurrentCycle = 1;
+                currentPhaseIndex = 0;
+            } else {
+                 const phases = breathingTechniques[breathingTechnique].phases;
+                 currentPhaseIndex = phases.findIndex(p => p.name === breathingPhase);
+            }
 
-        function startBreathingPhases() {
-            breathingCurrentCycle = 1;
-            breathingPhase = 'inhale';
-            breathingPhaseTime = breathingTechniques[breathingTechnique].phases[0].duration;
-            let currentPhaseIndex = 0;
-            
-            updateBreathingDisplay();
-            
-            breathingInterval = setInterval(() => {
-                breathingPhaseTime--;
-                document.getElementById('breathingCounter').textContent = breathingPhaseTime;
-                
-                if (breathingPhaseTime <= 0) {
-                    // Move to next phase
-                    currentPhaseIndex++;
-                    
-                    if (currentPhaseIndex >= breathingTechniques[breathingTechnique].phases.length) {
-                        // Cycle complete
-                        breathingCurrentCycle++;
-                        currentPhaseIndex = 0;
-                        
+            function runNextPhase() {
+                const phases = breathingTechniques[breathingTechnique].phases;
+                if (!phases || currentPhaseIndex >= phases.length) return;
+                const phaseData = phases[currentPhaseIndex];
+                breathingPhase = phaseData.name;
+                breathingPhaseTime = phaseData.duration;
+                updateBreathingDisplay(breathingPhase, breathingPhaseTime);
+
+                breathingInterval = setInterval(() => {
+                    breathingPhaseTime--;
+                    updateBreathingDisplay(breathingPhase, breathingPhaseTime);
+
+                    if (breathingPhaseTime <= 0) {
+                        clearInterval(breathingInterval);
+                        currentPhaseIndex++;
+                        if (currentPhaseIndex >= phases.length) {
+                            currentPhaseIndex = 0;
+                            breathingCurrentCycle++;
+                        }
                         if (breathingCurrentCycle > breathingTotalCycles) {
-                            // Exercise complete
                             completeBreathingExercise();
-                            return;
+                        } else {
+                            runNextPhase();
                         }
                     }
-                    
-                    const currentPhase = breathingTechniques[breathingTechnique].phases[currentPhaseIndex];
-                    breathingPhase = currentPhase.name;
-                    breathingPhaseTime = currentPhase.duration;
-                    updateBreathingDisplay();
-                }
-            }, 1000);
+                }, 1000);
+            }
+            runNextPhase();
         }
 
-        function updateBreathingDisplay() {
-            const currentPhase = breathingTechniques[breathingTechnique].phases.find(p => p.name === breathingPhase);
-            if (currentPhase) {
-                document.getElementById('breathingInstructions').textContent = currentPhase.instruction;
+        function updateBreathingDisplay(phase, time) {
+            const instructionsEl = document.getElementById('breathingInstructions');
+            const counterEl = document.getElementById('breathingCounter');
+            const circleEl = document.getElementById('breathingCircle');
+            const progressFillEl = document.getElementById('breathingProgressFill');
+            const progressTextEl = document.getElementById('breathingProgressText');
+
+            if (phase === 'ready') {
+                instructionsEl.textContent = 'Pripravte sa na začiatok cvičenia...';
+                counterEl.textContent = '';
+                circleEl.className = 'breathing-inner-circle';
+                progressFillEl.style.width = '0%';
+                progressTextEl.textContent = `Cyklus 0 z ${breathingTotalCycles}`;
+            } else if (phase === 'countdown') {
+                instructionsEl.textContent = 'Pripravte sa...';
+                counterEl.textContent = time > 0 ? time : 'Štart!';
+            } else {
+                const phaseData = breathingTechniques[breathingTechnique].phases.find(p => p.name === phase);
+                if (!phaseData) return;
+                instructionsEl.textContent = phaseData.instruction;
+                counterEl.textContent = time > 0 ? time : '';
+                circleEl.style.transitionDuration = `${phaseData.duration}s`;
+                circleEl.className = `breathing-inner-circle ${phase}`;
+                progressTextEl.textContent = `Cyklus ${breathingCurrentCycle} z ${breathingTotalCycles}`;
+                const progressPercent = breathingCurrentCycle > 0 ? ((breathingCurrentCycle - 1) / breathingTotalCycles) * 100 : 0;
+                progressFillEl.style.width = `${progressPercent}%`;
             }
-            
-            // Update circle animation
-            const circle = document.getElementById('breathingCircle');
-            circle.className = `breathing-inner-circle ${breathingPhase}`;
-            
-            // Update progress
-            const progress = ((breathingCurrentCycle - 1) / breathingTotalCycles) * 100;
-            document.getElementById('breathingProgressFill').style.width = `${progress}%`;
-            document.getElementById('breathingProgressText').textContent = `Cyklus ${breathingCurrentCycle} z ${breathingTotalCycles}`;
         }
 
         function pauseBreathing() {
-            if (breathingInterval) {
+            if (breathingIsPaused) {
+                breathingIsPaused = false;
+                document.getElementById('pauseBreathingBtn').textContent = 'Pauza';
+                startBreathingPhases(true);
+            } else {
                 clearInterval(breathingInterval);
-                breathingInterval = null;
                 breathingIsPaused = true;
                 document.getElementById('pauseBreathingBtn').textContent = 'Pokračovať';
                 document.getElementById('breathingInstructions').textContent = 'Cvičenie pozastavené';
-            } else if (breathingIsPaused) {
-                startBreathingPhases();
-                breathingIsPaused = false;
-                document.getElementById('pauseBreathingBtn').textContent = 'Pauza';
             }
         }
 
         function completeBreathingExercise() {
-            if (breathingInterval) {
-                clearInterval(breathingInterval);
-                breathingInterval = null;
-            }
-            
+            clearInterval(breathingInterval);
+            breathingIsRunning = false;
             document.getElementById('breathingInstructions').textContent = 'Cvičenie dokončené! Výborne!';
             document.getElementById('breathingCounter').textContent = '✓';
             document.getElementById('breathingProgressFill').style.width = '100%';
-            document.getElementById('breathingProgressText').textContent = 'Dokončené';
             document.getElementById('pauseBreathingBtn').style.display = 'none';
             document.getElementById('startBreathingBtn').style.display = 'inline-block';
             document.getElementById('startBreathingBtn').textContent = 'Znova';
-            
-            setTimeout(() => {
-                closeBreathingExercise();
-            }, 3000);
+            setTimeout(closeBreathingExercise, 3000);
         }
 
-        function showTypingIndicator() { typingIndicator.style.display = 'flex'; scrollToBottom(); }
-        function hideTypingIndicator() { typingIndicator.style.display = 'none'; }
-        function scrollToBottom() { chatMessages.scrollTop = chatMessages.scrollHeight; }
+        // --- PSS-10 ---
+        const pssQuestions = [
+            { text: "Ako často ste boli rozrušený/á kvôli niečomu, čo sa stalo nečakane?" },
+            { text: "Ako často ste mali pocit, že nemáte pod kontrolou dôležité veci vo svojom živote?" },
+            { text: "Ako často ste sa cítili nervózne a v strese?" },
+            { text: "Ako často ste mali pocit istoty vo svojej schopnosti zvládať osobné problémy?" },
+            { text: "Ako často ste mali pocit, že veci idú podľa vašich predstáv?" },
+            { text: "Ako často ste zistili, že nedokážete zvládnuť všetko, čo ste mali urobiť?" },
+            { text: "Ako často ste boli schopný/á ovládať podráždenie vo svojom živote?" },
+            { text: "Ako často ste mali pocit, že máte všetko pod kontrolou?" },
+            { text: "Ako často ste sa hnevali kvôli veciam, ktoré ste nemohli ovplyvniť?" },
+            { text: "Ako často ste mali pocit, že sa vám hromadia ťažkosti tak vysoko, že ich nedokážete prekonať?" }
+        ];
+        const pssReverseScoredIndices = [3, 4, 6, 7]; 
+        const pssScaleOptions = [ { value: 0, text: "Nikdy" }, { value: 1, text: "Takmer nikdy" }, { value: 2, text: "Niekedy" }, { value: 3, text: "Pomerne často" }, { value: 4, text: "Veľmi často" }];
 
+        function openPssAssessment() {
+            document.getElementById('pssOverlay').style.display = 'flex';
+            renderPssQuestions();
+            document.getElementById('pssForm').style.display = 'block';
+            document.getElementById('pssFormActions').style.display = 'flex';
+            document.getElementById('pssResultContainer').style.display = 'none';
+        }
+
+        function closePssAssessment() {
+            document.getElementById('pssOverlay').style.display = 'none';
+        }
+
+        function renderPssQuestions() {
+            const container = document.getElementById('pssQuestionList');
+            container.innerHTML = '';
+            pssQuestions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'pss-question';
+                questionDiv.innerHTML = `<p>${index + 1}. ${q.text}</p><div class="pss-scale">${pssScaleOptions.map(opt => `<label><input type="radio" name="pss-q-${index}" value="${opt.value}" required> ${opt.text}</label>`).join('')}</div>`;
+                container.appendChild(questionDiv);
+            });
+        }
+        
+        document.getElementById('pssForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            let score = 0;
+            const totalQuestions = pssQuestions.length;
+            let answeredCount = 0;
+
+            for (let i = 0; i < totalQuestions; i++) {
+                const selected = document.querySelector(`input[name="pss-q-${i}"]:checked`);
+                if (selected) {
+                    answeredCount++;
+                    let value = parseInt(selected.value);
+                    score += pssReverseScoredIndices.includes(i) ? (4 - value) : value;
+                }
+            }
+            
+            if (answeredCount < totalQuestions) {
+                alert('Prosím, odpovedzte na všetky otázky.');
+                return;
+            }
+            
+            stressData.unshift({ type: 'pss', date: new Date().toISOString(), dateStr: new Date().toLocaleDateString('sk-SK'), pssScore: score, timestamp: Date.now() });
+            saveStressData();
+            updateDashboard();
+            showPssResult(score);
+        });
+
+        function showPssResult(score) {
+            document.getElementById('pssFormActions').style.display = 'none';
+            document.getElementById('pssResultContainer').style.display = 'block';
+            document.getElementById('pssResultScore').textContent = score;
+            let interpretation = 'Vysoká úroveň vnímaného stresu.';
+            if (score <= 13) interpretation = 'Nízka úroveň vnímaného stresu.';
+            else if (score <= 26) interpretation = 'Mierna úroveň vnímaného stresu.';
+            document.getElementById('pssResultInterpretation').textContent = interpretation;
+        }
+
+        // --- Daily Stress Tracking Functions ---
+        function startStressTracking() {
+            document.getElementById('stressOverlay').style.display = 'flex';
+            resetStressForm();
+        }
+
+        function closeStressTracking() {
+            document.getElementById('stressOverlay').style.display = 'none';
+        }
+
+        function resetStressForm() {
+            selectedStressLevel = null;
+            selectedSleepLevel = null;
+            document.querySelectorAll('#stressScale .stress-number, #sleepScale .stress-number').forEach(num => num.classList.remove('selected'));
+            document.getElementById('stressSource').value = '';
+        }
+        
+        function setupScales() {
+            const stressScaleContainer = document.getElementById('stressScale');
+            stressScaleContainer.innerHTML = Array.from({length: 10}, (_, i) => `<div class="stress-number" data-value="${i + 1}">${i + 1}</div>`).join('');
+            stressScaleContainer.addEventListener('click', e => {
+                if(e.target.classList.contains('stress-number')) {
+                    stressScaleContainer.querySelectorAll('.stress-number').forEach(n => n.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    selectedStressLevel = parseInt(e.target.dataset.value);
+                }
+            });
+
+            const sleepScaleContainer = document.getElementById('sleepScale');
+            sleepScaleContainer.innerHTML = Array.from({length: 5}, (_, i) => `<div class="stress-number" data-value="${i + 1}">${i + 1}</div>`).join('');
+            sleepScaleContainer.addEventListener('click', e => {
+                if(e.target.classList.contains('stress-number')) {
+                    sleepScaleContainer.querySelectorAll('.stress-number').forEach(n => n.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    selectedSleepLevel = parseInt(e.target.dataset.value);
+                }
+            });
+        }
+
+        document.getElementById('stressForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (selectedStressLevel === null) return alert('Prosím, vyberte úroveň stresu.');
+            if (selectedSleepLevel === null) return alert('Prosím, vyberte kvalitu spánku.');
+            
+            stressData.unshift({ type: 'daily', date: new Date().toISOString(), dateStr: new Date().toLocaleDateString('sk-SK'), stressLevel: selectedStressLevel, sleepLevel: selectedSleepLevel, stressSource: document.getElementById('stressSource').value.trim(), timestamp: Date.now() });
+            saveStressData();
+            updateDashboard();
+            closeStressTracking();
+        });
+
+
+        // --- Data & Dashboard ---
+        function loadStressData() {
+            try {
+                const saved = localStorage.getItem('stressTrackingData');
+                stressData = saved ? JSON.parse(saved) : [];
+            } catch (error) { console.error('Error loading stress data:', error); stressData = []; }
+        }
+
+        function saveStressData() {
+            try {
+                localStorage.setItem('stressTrackingData', JSON.stringify(stressData));
+            } catch (error) { console.error('Error saving stress data:', error); }
+        }
+
+        function updateDashboard() {
+            const dailyEntries = stressData.filter(e => e.type === 'daily');
+            const pssEntries = stressData.filter(e => e.type === 'pss');
+
+            const last7Days = dailyEntries.filter(e => (Date.now() - e.timestamp) < 7 * 24 * 60 * 60 * 1000);
+            document.getElementById('avgStressLevel').textContent = last7Days.length > 0 ? (last7Days.reduce((s, e) => s + e.stressLevel, 0) / last7Days.length).toFixed(1) : '-';
+            document.getElementById('lastPssScore').textContent = pssEntries.length > 0 ? pssEntries[0].pssScore : '-';
+            document.getElementById('totalEntries').textContent = stressData.length;
+
+            let streak = 0;
+            const uniqueDays = [...new Set(dailyEntries.map(e => e.dateStr))];
+            if (uniqueDays.length > 0) {
+                for (let i = 0; i < 365; i++) {
+                    const checkDate = new Date();
+                    checkDate.setDate(checkDate.getDate() - i);
+                    if (uniqueDays.includes(checkDate.toLocaleDateString('sk-SK'))) streak++;
+                    else break;
+                }
+            }
+            document.getElementById('streakDays').textContent = streak;
+            
+            updateStressHistory();
+            updateChartPlaceholder();
+        }
+
+        function updateStressHistory() {
+            const historyList = document.getElementById('stressHistoryList');
+            const recentEntries = stressData.slice(0, 10);
+            if (recentEntries.length === 0) {
+                historyList.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;">Zatiaľ žiadne záznamy.</div>';
+                return;
+            }
+            historyList.innerHTML = recentEntries.map(entry => {
+                if (entry.type === 'daily') {
+                    let scoreClass = entry.stressLevel >= 7 ? 'high' : (entry.stressLevel >= 4 ? 'medium' : 'low');
+                    return `<div class="history-item"><div><div class="history-date">${entry.dateStr} (Denný)</div></div><div class="history-score ${scoreClass}">Stres: ${entry.stressLevel}/10</div></div>`;
+                } else if (entry.type === 'pss') {
+                    let scoreClass = entry.pssScore > 26 ? 'high' : (entry.pssScore > 13 ? 'medium' : 'low');
+                    return `<div class="history-item"><div><div class="history-date">${entry.dateStr} (PSS-10)</div></div><div class="history-score ${scoreClass}">Skóre: ${entry.pssScore}/40</div></div>`;
+                }
+            }).join('');
+        }
+        
+        function updateChartPlaceholder() {
+            const chartPlaceholder = document.getElementById('stressChart');
+            const dailyEntries = stressData.filter(e => e.type === 'daily');
+            if (dailyEntries.length < 2) {
+                chartPlaceholder.textContent = `📈 Graf sa zobrazí po aspoň 2 denných záznamoch.`;
+                return;
+            }
+            const avgStress = (dailyEntries.reduce((s, e) => s + e.stressLevel, 0) / dailyEntries.length).toFixed(1);
+            chartPlaceholder.innerHTML = `<div style="text-align: center; padding: 20px;">Priemerný denný stres: <b style="font-size: 24px;">${avgStress}</b></div>`;
+        }
+
+        function exportStressData() {
+            if (stressData.length === 0) return alert('Žiadne dáta na export.');
+            const headers = ['Typ', 'Datum', 'Stress_Level(1-10)', 'Sleep_Level(1-5)', 'PSS_Score(0-40)', 'Poznamka'];
+            const csvContent = [headers.join(','), ...stressData.map(e => [e.type, e.dateStr, e.stressLevel || '', e.sleepLevel || '', e.pssScore || '', `"${(e.stressSource || '').replace(/"/g, '""')}"`].join(','))].join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `stress_data_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // --- App Initialization ---
         document.addEventListener('DOMContentLoaded', function() {
+            // Inicializácia všetkých častí aplikácie
             checkConnection();
-            setTimeout(() => messageInput.focus(), 100);
             connectionCheckInterval = setInterval(checkConnection, CHECK_CONNECTION_INTERVAL);
-            messageInput.addEventListener('keypress', function(event) { if (event.key === 'Enter' && !event.shiftKey) { event.preventDefault(); sendButton.click(); }});
-
-            // Initialize stress tracking
             loadStressData();
-            setupStressScales();
-            setupStressForm();
+            setupScales();
             updateDashboard();
 
+            // Navigácia
             const navButtons = document.querySelectorAll('.nav-btn');
             const views = document.querySelectorAll('.view');
             const headerTitle = document.getElementById('headerTitle');
@@ -1511,29 +1063,23 @@
                     navButtons.forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');
                     const viewId = button.dataset.view;
-                    const title = button.dataset.title;
-                    const subtitle = button.dataset.subtitle;
-                    views.forEach(view => {
-                        view.classList.remove('active');
-                        if (view.id === viewId) {
-                            view.classList.add('active');
-                        }
-                    });
-                    headerTitle.innerHTML = title;
-                    headerSubtitle.textContent = subtitle;
+                    headerTitle.innerHTML = button.dataset.title;
+                    headerSubtitle.textContent = button.dataset.subtitle;
+                    views.forEach(view => view.classList.remove('active'));
+                    document.getElementById(viewId).classList.add('active');
                     newSessionBtn.style.display = (viewId === 'chatView') ? 'flex' : 'none';
-                    
-                    // Update dashboard when switching to it
-                    if (viewId === 'dashboardView') {
-                        updateDashboard();
-                    }
+                    if (viewId === 'dashboardView') updateDashboard();
                 });
             });
+
+            // Chat form listener
+            document.getElementById('chatForm').addEventListener('submit', sendMessage);
 
             // Breathing technique selector
             const techniqueButtons = document.querySelectorAll('.technique-btn');
             techniqueButtons.forEach(button => {
                 button.addEventListener('click', () => {
+                    if (breathingIsRunning) return;
                     techniqueButtons.forEach(btn => btn.classList.remove('active'));
                     button.classList.add('active');
                     breathingTechnique = button.dataset.technique;
@@ -1541,10 +1087,6 @@
                 });
             });
         });
-        
-        window.addEventListener('focus', () => { if (!messageInput.disabled) messageInput.focus(); });
-        window.addEventListener('beforeunload', () => { if (connectionCheckInterval) clearInterval(connectionCheckInterval); });
-
     </script>
 </body>
 </html>
