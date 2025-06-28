@@ -1,423 +1,409 @@
-# privacy_modes.py - Systém pre rôzne privacy módy
-
-from flask import Flask, request, jsonify, session
-import os
-import uuid
-import time
-from enum import Enum
-from typing import Dict, List, Optional
+# database.py - Databázová vrstva pre AsisTeRapie
+import sqlite3
 import json
+import os
+import time
+import uuid
+from datetime import datetime, timedelta
+from typing import List, Dict, Optional
 
-class PrivacyMode(Enum):
-    EPHEMERAL = "ephemeral"      # Žiadne ukladanie - všetko v pamäti
-    TEMPORARY = "temporary"      # Ukladanie na 24h, potom auto-delete
-    PERSISTENT = "persistent"    # Ukladanie až kým používateľ nezmaže
-    ENCRYPTED = "encrypted"      # Ukladanie so silným šifrovaním
-
-class PrivacyManager:
+class TherapyDatabase:
     """
-    Manažér pre rôzne privacy módy používateľa
+    SQLite databáza pre Terapeutický Asistent
+    Automaticky sa vytvorí pri prvom spustení
     """
     
-    def __init__(self):
-        # In-memory storage pre ephemeral módy
-        self.ephemeral_sessions = {}
+    def __init__(self, db_path: str = "asisterapie_data.db"):
+        self.db_path = db_path
+        self.init_database()
+        print(f"✅ AsisTeRapie databáza ready: {os.path.abspath(db_path)}")
+    
+    def init_database(self):
+        """Vytvorí databázové tabuľky ak neexistujú"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            # Sessions tabuľka
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS sessions (
+                    session_id TEXT PRIMARY KEY,
+                    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    total_messages INTEGER DEFAULT 0,
+                    user_ip TEXT,
+                    user_agent TEXT,
+                    crisis_count INTEGER DEFAULT 0
+                )
+            ''')
+            
+            # Messages tabuľka  
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS messages (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT,
+                    role TEXT,
+                    content TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    crisis_detected BOOLEAN DEFAULT FALSE,
+                    sentiment_score REAL,
+                    FOREIGN KEY (session_id) REFERENCES sessions (session_id)
+                )
+            ''')
+            
+            # Crisis events tabuľka
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS crisis_events (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT,
+                    message_id INTEGER,
+                    crisis_keywords TEXT,
+                    timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    handled BOOLEAN DEFAULT TRUE,
+                    FOREIGN KEY (session_id) REFERENCES sessions (session_id),
+                    FOREIGN KEY (message_id) REFERENCES messages (id)
+                )
+            ''')
+            
+            conn.commit()
+            print("📊 Databázové tabuľky inicializované")
+    
+    def create_session(self, user_ip: str = None, user_agent: str = None) -> str:
+        """Vytvorí novú session"""
+        session_id = str(uuid.uuid4())
         
-        # Temporary storage s expiration timestamps
-        self.temporary_sessions = {}
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO sessions (session_id, user_ip, user_agent)
+                VALUES (?, ?, ?)
+            ''', (session_id, user_ip, user_agent))
+            conn.commit()
         
-        # User privacy preferences
-        self.user_privacy_choices = {}
+        print(f"🆕 Nová session: {session_id[:8]}...")
+        return session_id
+    
+    def add_message(self, session_id: str, role: str, content: str, 
+                   crisis_detected: bool = False, sentiment_score: float = None) -> int:
+        """Pridá správu do konverzácie"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute('''
+                INSERT INTO messages (session_id, role, content, crisis_detected, sentiment_score)
+                VALUES (?, ?, ?, ?, ?)
+            ''', (session_id, role, content, crisis_detected, sentiment_score))
+            
+            message_id = cursor.lastrowid
+            
+            # Aktualizuj session
+            cursor.execute('''
+                UPDATE sessions 
+                SET last_activity = CURRENT_TIMESTAMP,
+                    total_messages = total_messages + 1,
+                    crisis_count = crisis_count + ?
+                WHERE session_id = ?
+            ''', (1 if crisis_detected else 0, session_id))
+            
+            conn.commit()
+            
+        print(f"💬 Message saved: {role} | Crisis: {crisis_detected}")
+        return message_id
+    
+    def log_crisis_event(self, session_id: str, message_id: int, keywords: List[str]):
+        """Zaloguje krízovú udalosť"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO crisis_events (session_id, message_id, crisis_keywords)
+                VALUES (?, ?, ?)
+            ''', (session_id, message_id, json.dumps(keywords)))
+            conn.commit()
         
-    def get_privacy_options(self) -> Dict:
-        """Vráti dostupné privacy options pre frontend"""
-        return {
-            "modes": [
-                {
-                    "id": "ephemeral",
-                    "name": "🔥 Ultra Privátny",
-                    "description": "Nič sa neukladá. Konverzácia existuje len počas session.",
-                    "features": [
-                        "✅ Zero storage - žiadne stopy",
-                        "✅ Perfektné pre citlivé témy", 
-                        "✅ GDPR compliant by design",
-                        "❌ Žiadna história medzi session"
-                    ],
-                    "retention": "0 hodín",
-                    "recommended": True
+        print(f"🚨 Crisis logged: {keywords}")
+    
+    def get_conversation_history(self, session_id: str, limit: int = 50) -> List[Dict]:
+        """Získa históriu konverzácie"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT role, content, timestamp, crisis_detected, sentiment_score
+                FROM messages 
+                WHERE session_id = ? 
+                ORDER BY timestamp DESC 
+                LIMIT ?
+            ''', (session_id, limit))
+            
+            messages = []
+            for row in cursor.fetchall():
+                messages.append({
+                    'role': row[0],
+                    'content': row[1],
+                    'timestamp': row[2],
+                    'crisis_detected': bool(row[3]),
+                    'sentiment_score': row[4]
+                })
+            
+            return list(reversed(messages))
+    
+    def get_admin_dashboard_data(self) -> Dict:
+        """Dáta pre admin dashboard"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            # Základné štatistiky
+            cursor.execute('SELECT COUNT(*) FROM sessions')
+            total_sessions = cursor.fetchone()[0]
+            
+            cursor.execute('SELECT COUNT(*) FROM messages')
+            total_messages = cursor.fetchone()[0]
+            
+            cursor.execute('SELECT COUNT(*) FROM crisis_events')
+            total_crisis = cursor.fetchone()[0]
+            
+            # Dnešné štatistiky
+            today = datetime.now().date()
+            cursor.execute('''
+                SELECT COUNT(*) FROM sessions 
+                WHERE DATE(created_at) = ?
+            ''', (today,))
+            today_sessions = cursor.fetchone()[0]
+            
+            cursor.execute('''
+                SELECT COUNT(*) FROM messages 
+                WHERE DATE(timestamp) = ?
+            ''', (today,))
+            today_messages = cursor.fetchone()[0]
+            
+            # Posledné session
+            cursor.execute('''
+                SELECT session_id, created_at, total_messages, crisis_count
+                FROM sessions 
+                ORDER BY created_at DESC 
+                LIMIT 10
+            ''')
+            recent_sessions = cursor.fetchall()
+            
+            # Krízové udalosti
+            cursor.execute('''
+                SELECT ce.timestamp, ce.crisis_keywords, s.session_id
+                FROM crisis_events ce
+                JOIN sessions s ON ce.session_id = s.session_id
+                ORDER BY ce.timestamp DESC
+                LIMIT 5
+            ''')
+            recent_crisis = cursor.fetchall()
+            
+            return {
+                'overview': {
+                    'total_sessions': total_sessions,
+                    'total_messages': total_messages,
+                    'total_crisis_events': total_crisis,
+                    'today_sessions': today_sessions,
+                    'today_messages': today_messages,
+                    'database_file': os.path.abspath(self.db_path),
+                    'database_size_mb': round(os.path.getsize(self.db_path) / 1024 / 1024, 2) if os.path.exists(self.db_path) else 0
                 },
-                {
-                    "id": "temporary", 
-                    "name": "⏰ Dočasný",
-                    "description": "Konverzácia sa automaticky zmaže po 24 hodinách.",
-                    "features": [
-                        "✅ Kontextová história v rámci dňa",
-                        "✅ Automatické mazanie po 24h",
-                        "✅ Dobrý kompromis medzi funkčnosťou a privacy",
-                        "⚠️ Dáta na serveri max 24h"
-                    ],
-                    "retention": "24 hodín",
-                    "recommended": False
-                },
-                {
-                    "id": "persistent",
-                    "name": "📚 Trvalý",
-                    "description": "História sa ukladá až kým ju sami nezmažete.",
-                    "features": [
-                        "✅ Dlhodobá história konverzácií",
-                        "✅ Tracking pokroku a trendov",
-                        "✅ Personalizované AI odpovede",
-                        "✅ Kedykoľvek možnosť zmazať všetko",
-                        "⚠️ Dáta na serveri až do zmazania"
-                    ],
-                    "retention": "Až do zmazania používateľom",
-                    "recommended": False
-                },
-                {
-                    "id": "encrypted",
-                    "name": "🔐 Šifrovaný",
-                    "description": "Historia sa ukladá s end-to-end šifrovaním.",
-                    "features": [
-                        "✅ Všetky výhody trvalého módu",
-                        "✅ End-to-end šifrovanie",
-                        "✅ Ani admin servera nemôže čítať správy",
-                        "✅ Váš kľúč = vaša kontrola",
-                        "❌ Stratený kľúč = stratené dáta"
-                    ],
-                    "retention": "Šifrované až do zmazania",
-                    "recommended": False
-                }
-            ],
-            "gdpr_info": {
-                "right_to_delete": "Máte právo kedykoľvek zmazať všetky svoje dáta",
-                "right_to_export": "Môžete exportovať svoje dáta v JSON formáte", 
-                "right_to_portability": "Vaše dáta sú exportovateľné",
-                "contact": "privacy@klidbot.com"
+                'recent_sessions': [
+                    {
+                        'session_id': row[0][:8] + '...',
+                        'created_at': row[1],
+                        'total_messages': row[2],
+                        'crisis_count': row[3]
+                    } for row in recent_sessions
+                ],
+                'recent_crisis_events': [
+                    {
+                        'timestamp': row[0],
+                        'keywords': json.loads(row[1]) if row[1] else [],
+                        'session_id': row[2][:8] + '...'
+                    } for row in recent_crisis
+                ]
             }
+
+    def export_all_data(self) -> Dict:
+        """Exportuje všetky dáta"""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            cursor.execute('SELECT * FROM sessions')
+            sessions = [dict(zip([col[0] for col in cursor.description], row)) 
+                       for row in cursor.fetchall()]
+            
+            cursor.execute('SELECT * FROM messages')
+            messages = [dict(zip([col[0] for col in cursor.description], row)) 
+                       for row in cursor.fetchall()]
+            
+            cursor.execute('SELECT * FROM crisis_events')
+            crisis_events = [dict(zip([col[0] for col in cursor.description], row)) 
+                           for row in cursor.fetchall()]
+            
+            return {
+                'export_timestamp': datetime.now().isoformat(),
+                'database_file': self.db_path,
+                'sessions': sessions,
+                'messages': messages,
+                'crisis_events': crisis_events,
+                'total_records': len(sessions) + len(messages) + len(crisis_events)
+            }
+
+# Admin Dashboard HTML Template
+ADMIN_DASHBOARD_HTML = '''
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <title>AsisTeRapie Admin Dashboard</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .header { background: linear-gradient(135deg, #6D5BBA 0%, #8D58BF 100%); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0 0 0; opacity: 0.9; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .stat-number { font-size: 32px; font-weight: bold; color: #6D5BBA; }
+        .stat-label { color: #666; font-size: 14px; margin-top: 5px; }
+        .section { background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .section h3 { margin-top: 0; color: #333; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .crisis-badge { background: #e74c3c; color: white; padding: 2px 8px; border-radius: 12px; font-size: 12px; }
+        .btn { background: #6D5BBA; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; margin-right: 10px; }
+        .btn:hover { background: #5a4a9a; }
+        .file-info { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace; }
+        .no-data { text-align: center; color: #666; padding: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 AsisTeRapie Admin Dashboard</h1>
+            <p>Real-time monitoring databázy a používateľov</p>
+            <button class="btn" onclick="location.reload()">🔄 Refresh</button>
+            <button class="btn" onclick="exportData()">📥 Export Data</button>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">{{ data.overview.total_sessions }}</div>
+                <div class="stat-label">Celkom Sessions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ data.overview.total_messages }}</div>
+                <div class="stat-label">Celkom Správ</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ data.overview.total_crisis_events }}</div>
+                <div class="stat-label">Krízové Udalosti</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ data.overview.today_sessions }}</div>
+                <div class="stat-label">Dnes Sessions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ data.overview.today_messages }}</div>
+                <div class="stat-label">Dnes Správ</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ data.overview.database_size_mb }} MB</div>
+                <div class="stat-label">Veľkosť DB</div>
+            </div>
+        </div>
+
+        <div class="file-info">
+            <strong>📁 Databáza na Azure serveri:</strong><br>
+            <code>{{ data.overview.database_file }}</code><br>
+            <small>Prístup cez Azure Portal > App Service > SSH</small>
+        </div>
+
+        <div class="section">
+            <h3>📈 Posledné Sessions</h3>
+            {% if data.recent_sessions %}
+            <table>
+                <thead>
+                    <tr><th>Session ID</th><th>Vytvorené</th><th>Správy</th><th>Krízy</th></tr>
+                </thead>
+                <tbody>
+                    {% for session in data.recent_sessions %}
+                    <tr>
+                        <td><code>{{ session.session_id }}</code></td>
+                        <td>{{ session.created_at }}</td>
+                        <td>{{ session.total_messages }}</td>
+                        <td>
+                            {% if session.crisis_count > 0 %}
+                                <span class="crisis-badge">{{ session.crisis_count }}</span>
+                            {% else %}-{% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">Zatiaľ žiadne session</div>
+            {% endif %}
+        </div>
+
+        {% if data.recent_crisis_events %}
+        <div class="section">
+            <h3>🚨 Posledné Krízové Udalosti</h3>
+            <table>
+                <thead>
+                    <tr><th>Čas</th><th>Session</th><th>Keywords</th></tr>
+                </thead>
+                <tbody>
+                    {% for crisis in data.recent_crisis_events %}
+                    <tr>
+                        <td>{{ crisis.timestamp }}</td>
+                        <td><code>{{ crisis.session_id }}</code></td>
+                        <td>{{ crisis.keywords|join(', ') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="section">
+            <h3>🚨 Krízové Udalosti</h3>
+            <div class="no-data">✅ Žiadne krízové udalosti</div>
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function exportData() {
+            window.open('/admin/export', '_blank');
         }
+        // Auto refresh každých 30 sekúnd
+        setTimeout(() => location.reload(), 30000);
+    </script>
+</body>
+</html>
+'''
+
+def create_admin_routes(app, db):
+    """Vytvorí admin routes pre Flask app"""
     
-    def set_user_privacy_choice(self, session_id: str, mode: str, user_consent: Dict) -> bool:
-        """Nastaví privacy voľbu používateľa"""
+    @app.route('/admin')
+    @app.route('/admin/dashboard')
+    def admin_dashboard():
+        """Admin dashboard"""
         try:
-            privacy_mode = PrivacyMode(mode)
-            self.user_privacy_choices[session_id] = {
-                'mode': privacy_mode,
-                'timestamp': time.time(),
-                'consent': user_consent,
-                'ip_hash': user_consent.get('ip_hash'),
-                'user_agent_hash': user_consent.get('user_agent_hash')
-            }
-            return True
-        except ValueError:
-            return False
+            from flask import render_template_string
+            data = db.get_admin_dashboard_data()
+            return render_template_string(ADMIN_DASHBOARD_HTML, data=data)
+        except Exception as e:
+            return f"<h1>Database Error</h1><p>{e}</p><p>Databáza sa vytvorí pri prvom použití chatu.</p>", 500
     
-    def get_user_privacy_mode(self, session_id: str) -> Optional[PrivacyMode]:
-        """Získa privacy mód pre session"""
-        choice = self.user_privacy_choices.get(session_id)
-        return choice['mode'] if choice else None
-    
-    def store_message(self, session_id: str, role: str, content: str, 
-                     crisis_detected: bool = False) -> bool:
-        """Uloží správu podľa zvoleného privacy módu"""
-        privacy_mode = self.get_user_privacy_mode(session_id)
-        
-        if not privacy_mode:
-            # Default to ephemeral if no choice made
-            privacy_mode = PrivacyMode.EPHEMERAL
-        
-        message_data = {
-            'role': role,
-            'content': content,
-            'timestamp': time.time(),
-            'crisis_detected': crisis_detected
-        }
-        
-        if privacy_mode == PrivacyMode.EPHEMERAL:
-            return self._store_ephemeral(session_id, message_data)
-        elif privacy_mode == PrivacyMode.TEMPORARY:
-            return self._store_temporary(session_id, message_data)
-        elif privacy_mode == PrivacyMode.PERSISTENT:
-            return self._store_persistent(session_id, message_data)
-        elif privacy_mode == PrivacyMode.ENCRYPTED:
-            return self._store_encrypted(session_id, message_data)
-        
-        return False
-    
-    def _store_ephemeral(self, session_id: str, message_data: Dict) -> bool:
-        """Uloží do pamäte - zmaže sa pri reštarte servera"""
-        if session_id not in self.ephemeral_sessions:
-            self.ephemeral_sessions[session_id] = []
-        
-        # Udržuj max 20 správ v pamäti
-        if len(self.ephemeral_sessions[session_id]) >= 20:
-            self.ephemeral_sessions[session_id].pop(0)
-        
-        self.ephemeral_sessions[session_id].append(message_data)
-        return True
-    
-    def _store_temporary(self, session_id: str, message_data: Dict) -> bool:
-        """Uloží s 24h expiration"""
-        # Tu by si použil databázu s TTL (Time To Live)
-        expiration = time.time() + (24 * 60 * 60)  # 24 hodín
-        
-        if session_id not in self.temporary_sessions:
-            self.temporary_sessions[session_id] = {
-                'messages': [],
-                'expires_at': expiration
-            }
-        
-        self.temporary_sessions[session_id]['messages'].append(message_data)
-        return True
-    
-    def _store_persistent(self, session_id: str, message_data: Dict) -> bool:
-        """Uloží do databázy natrvalo"""
-        # Tu by si použil tvoju databázovú vrstvu
-        print(f"Storing persistent message for {session_id}")
-        return True
-    
-    def _store_encrypted(self, session_id: str, message_data: Dict) -> bool:
-        """Uloží šifrované s používateľovým kľúčom"""
-        # Tu by bolo end-to-end šifrovanie
-        print(f"Storing encrypted message for {session_id}")
-        return True
-    
-    def get_conversation_history(self, session_id: str, limit: int = 20) -> List[Dict]:
-        """Získa históriu podľa privacy módu"""
-        privacy_mode = self.get_user_privacy_mode(session_id)
-        
-        if privacy_mode == PrivacyMode.EPHEMERAL:
-            return self.ephemeral_sessions.get(session_id, [])[-limit:]
-        elif privacy_mode == PrivacyMode.TEMPORARY:
-            session_data = self.temporary_sessions.get(session_id)
-            if session_data and time.time() < session_data['expires_at']:
-                return session_data['messages'][-limit:]
-            else:
-                # Expired, clean up
-                if session_id in self.temporary_sessions:
-                    del self.temporary_sessions[session_id]
-                return []
-        elif privacy_mode in [PrivacyMode.PERSISTENT, PrivacyMode.ENCRYPTED]:
-            # Tu by si načítal z databázy
-            return []
-        
-        return []
-    
-    def delete_user_data(self, session_id: str, delete_scope: str = "session") -> Dict:
-        """
-        Zmaže dáta používateľa podľa rozsahu
-        delete_scope: "session" | "all" | "everything"
-        """
-        result = {
-            'deleted_sessions': 0,
-            'deleted_messages': 0,
-            'deleted_from': [],
-            'permanent': True
-        }
-        
-        privacy_mode = self.get_user_privacy_mode(session_id)
-        
-        if delete_scope == "session":
-            # Zmaž len aktuálnu session
-            if privacy_mode == PrivacyMode.EPHEMERAL:
-                if session_id in self.ephemeral_sessions:
-                    result['deleted_messages'] = len(self.ephemeral_sessions[session_id])
-                    del self.ephemeral_sessions[session_id]
-                    result['deleted_from'].append('memory')
-            
-            elif privacy_mode == PrivacyMode.TEMPORARY:
-                if session_id in self.temporary_sessions:
-                    result['deleted_messages'] = len(self.temporary_sessions[session_id]['messages'])
-                    del self.temporary_sessions[session_id]
-                    result['deleted_from'].append('temporary_storage')
-            
-            elif privacy_mode in [PrivacyMode.PERSISTENT, PrivacyMode.ENCRYPTED]:
-                # Tu by si zmazal z databázy
-                result['deleted_from'].append('database')
-                result['deleted_messages'] = self._delete_from_database(session_id)
-            
-            result['deleted_sessions'] = 1
-        
-        elif delete_scope == "everything":
-            # Zmaž všetko vrátane z Microsoft Azure, logov, backupov
-            result['deleted_from'] = [
-                'memory', 'temporary_storage', 'database', 
-                'azure_logs', 'backups', 'analytics'
-            ]
-            result['deleted_sessions'] = self._delete_everything(session_id)
-        
-        # Zmaž aj privacy choice
-        if session_id in self.user_privacy_choices:
-            del self.user_privacy_choices[session_id]
-        
-        return result
-    
-    def _delete_from_database(self, session_id: str) -> int:
-        """Zmaže z databázy a všetkých súvisiacich tabuliek"""
-        # Tu by bola implementácia mazania z databázy
-        print(f"Deleting from database: {session_id}")
-        return 0
-    
-    def _delete_everything(self, session_id: str) -> int:
-        """Kompletné vymazanie zo všetkých systémov"""
-        print(f"Complete deletion requested for: {session_id}")
-        # Tu by bolo:
-        # 1. Zmazanie z databázy
-        # 2. Zmazanie z Azure logs
-        # 3. Zmazanie z backup systémov
-        # 4. Zmazanie z analytics
-        # 5. Notifikácia všetkých systémov
-        return 1
-    
-    def export_user_data(self, session_id: str) -> Dict:
-        """Exportuje všetky dáta používateľa pre GDPR compliance"""
-        privacy_mode = self.get_user_privacy_mode(session_id)
-        
-        export_data = {
-            'export_timestamp': time.time(),
-            'export_date': time.strftime('%Y-%m-%d %H:%M:%S'),
-            'session_id': session_id[:8] + "...",  # Partial pre anonymitu
-            'privacy_mode': privacy_mode.value if privacy_mode else 'ephemeral',
-            'conversation_history': self.get_conversation_history(session_id),
-            'privacy_choices': self.user_privacy_choices.get(session_id, {}),
-            'gdpr_rights': {
-                'right_to_delete': 'You can delete all your data anytime',
-                'right_to_rectification': 'You can correct inaccurate data',
-                'right_to_portability': 'This export fulfills your portability rights'
-            }
-        }
-        
-        return export_data
-    
-    def cleanup_expired_data(self):
-        """Vyčistí expired temporary sessions"""
-        current_time = time.time()
-        expired_sessions = []
-        
-        for session_id, data in self.temporary_sessions.items():
-            if current_time > data['expires_at']:
-                expired_sessions.append(session_id)
-        
-        for session_id in expired_sessions:
-            del self.temporary_sessions[session_id]
-            print(f"Auto-deleted expired session: {session_id}")
-        
-        return len(expired_sessions)
-
-# ========================================
-# FLASK ROUTES PRE PRIVACY CONTROL
-# ========================================
-
-app = Flask(__name__)
-privacy_manager = PrivacyManager()
-
-@app.route('/privacy/options', methods=['GET'])
-def get_privacy_options():
-    """Vráti dostupné privacy možnosti"""
-    return jsonify(privacy_manager.get_privacy_options())
-
-@app.route('/privacy/choose', methods=['POST'])
-def choose_privacy_mode():
-    """Používateľ si vyberie privacy mód"""
-    data = request.get_json()
-    session_id = session.get('session_id', str(uuid.uuid4()))
-    
-    privacy_mode = data.get('mode')
-    user_consent = {
-        'explicit_consent': data.get('consent', False),
-        'timestamp': time.time(),
-        'ip_hash': hash(request.remote_addr) if request.remote_addr else None,
-        'user_agent_hash': hash(request.headers.get('User-Agent', ''))
-    }
-    
-    if privacy_manager.set_user_privacy_choice(session_id, privacy_mode, user_consent):
-        session['session_id'] = session_id
-        return jsonify({
-            'success': True,
-            'session_id': session_id[:8] + "...",
-            'mode': privacy_mode,
-            'message': f'Privacy mód "{privacy_mode}" bol nastavený.',
-            'data_retention': privacy_manager.get_privacy_options()['modes'][0]['retention']
-        })
-    else:
-        return jsonify({'success': False, 'error': 'Invalid privacy mode'}), 400
-
-@app.route('/privacy/delete', methods=['POST'])
-def delete_user_data():
-    """Zmaže dáta používateľa"""
-    data = request.get_json()
-    session_id = session.get('session_id')
-    
-    if not session_id:
-        return jsonify({'error': 'No active session'}), 400
-    
-    delete_scope = data.get('scope', 'session')  # session | all | everything
-    confirmation = data.get('confirmation', False)
-    
-    if not confirmation:
-        return jsonify({'error': 'Confirmation required'}), 400
-    
-    result = privacy_manager.delete_user_data(session_id, delete_scope)
-    
-    # Clear session after deletion
-    session.clear()
-    
-    return jsonify({
-        'success': True,
-        'deletion_result': result,
-        'message': 'Vaše dáta boli úspešne zmazané.',
-        'permanent': True,
-        'confirmation_id': str(uuid.uuid4())[:8]
-    })
-
-@app.route('/privacy/export', methods=['GET'])
-def export_user_data():
-    """Exportuje dáta používateľa"""
-    session_id = session.get('session_id')
-    
-    if not session_id:
-        return jsonify({'error': 'No active session'}), 400
-    
-    export_data = privacy_manager.export_user_data(session_id)
-    
-    return jsonify({
-        'success': True,
-        'export_data': export_data,
-        'download_filename': f'klidbot_export_{int(time.time())}.json'
-    })
-
-@app.route('/privacy/status', methods=['GET'])
-def get_privacy_status():
-    """Získa aktuálny privacy status"""
-    session_id = session.get('session_id')
-    
-    if not session_id:
-        return jsonify({
-            'has_session': False,
-            'mode': 'ephemeral',
-            'message': 'No active session - defaulting to ephemeral mode'
-        })
-    
-    privacy_mode = privacy_manager.get_user_privacy_mode(session_id)
-    history_count = len(privacy_manager.get_conversation_history(session_id))
-    
-    return jsonify({
-        'has_session': True,
-        'session_id': session_id[:8] + "...",
-        'mode': privacy_mode.value if privacy_mode else 'ephemeral',
-        'messages_stored': history_count,
-        'can_delete': True,
-        'can_export': history_count > 0
-    })
-
-# Background cleanup job
-import threading
-def background_cleanup():
-    while True:
-        time.sleep(3600)  # Každú hodinu
-        privacy_manager.cleanup_expired_data()
-
-cleanup_thread = threading.Thread(target=background_cleanup, daemon=True)
-cleanup_thread.start()
-
-if __name__ == '__main__':
-    app.run(debug=True)
+    @app.route('/admin/export')
+    def export_data():
+        """Export všetkých dát"""
+        try:
+            from flask import jsonify
+            data = db.export_all_data()
+            response = jsonify(data)
+            response.headers['Content-Disposition'] = f'attachment; filename=asisterapie_export_{int(time.time())}.json'
+            return response
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
