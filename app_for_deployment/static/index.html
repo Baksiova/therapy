@@ -3,253 +3,1461 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Serene - Váš sprievodca pokojom</title>
+    <title>KlidBot - Váš AI terapeutický spoločník</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-dark: #0B132B;
-            --surface1: #1C2541;
-            --surface2: #3A506B;
-            --primary: #5BC0BE;
-            --text-light: #F0F4F8;
-            --text-medium: #8D99AE;
-            --font-family: 'Inter', sans-serif;
-            --shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-            --radius-lg: 24px;
-            --radius-md: 16px;
+            /* Light Mode Colors */
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --primary-color: #667eea;
+            --primary-dark: #5a67d8;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            
+            /* Calming palette */
+            --success-color: #48bb78;
+            --warning-color: #ed8936;
+            --error-color: #f56565;
+            --info-color: #4299e1;
+            
+            /* Light theme */
+            --bg-primary: #ffffff;
+            --bg-secondary: #f7fafc;
+            --bg-tertiary: #edf2f7;
+            --bg-gradient: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            
+            --text-primary: #2d3748;
+            --text-secondary: #4a5568;
+            --text-muted: #718096;
+            --text-inverse: #ffffff;
+            
+            --border-color: #e2e8f0;
+            --border-light: #f1f5f9;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
+            
+            /* Glass effect */
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --backdrop-blur: blur(10px);
+            
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            --border-radius: 16px;
+            --border-radius-lg: 24px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
+        [data-theme="dark"] {
+            /* Dark Mode Colors */
+            --bg-primary: #1a202c;
+            --bg-secondary: #2d3748;
+            --bg-tertiary: #4a5568;
+            --bg-gradient: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            
+            --text-primary: #f7fafc;
+            --text-secondary: #e2e8f0;
+            --text-muted: #a0aec0;
+            --text-inverse: #1a202c;
+            
+            --border-color: #4a5568;
+            --border-light: #2d3748;
+            --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+            --shadow-md: 0 4px 15px rgba(0, 0, 0, 0.3);
+            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4);
+            
+            --glass-bg: rgba(45, 55, 72, 0.6);
+            --glass-border: rgba(160, 174, 192, 0.2);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
             font-family: var(--font-family);
-            background-color: #030712;
-            color: var(--text-light);
-            height: 100vh;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            line-height: 1.6;
+            transition: var(--transition);
+            min-height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
+            padding: 20px;
             overflow: hidden;
-        }
-        
-        #background-video {
-            position: fixed;
-            right: 0; bottom: 0;
-            min-width: 100%; min-height: 100%;
-            width: auto; height: auto;
-            z-index: -1;
-            opacity: 0.1;
-            object-fit: cover;
-            transition: opacity 1s ease;
         }
 
         .app-container {
             width: 100%;
-            max-width: 420px;
+            max-width: 900px;
             height: 95vh;
-            max-height: 850px;
-            background: rgba(11, 19, 43, 0.8);
-            backdrop-filter: blur(30px) saturate(180%);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow);
+            background: var(--glass-bg);
+            backdrop-filter: var(--backdrop-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--border-radius-lg);
+            box-shadow: var(--shadow-lg);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
 
-        .app-header {
-            padding: 20px; text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        /* Header with improved branding */
+        .chat-header {
+            background: var(--primary-gradient);
+            color: var(--text-inverse);
+            padding: 24px;
+            text-align: center;
+            position: relative;
             flex-shrink: 0;
         }
-        .app-header h1 { font-size: 20px; font-weight: 600; }
 
-        .app-main-content { flex: 1; position: relative; overflow: hidden; }
+        .header-brand {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+
+        .brand-logo {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -0.025em;
+        }
+
+        .chat-subtitle {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .header-controls {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .theme-toggle, .new-session-btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: var(--text-inverse);
+            padding: 8px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            font-family: var(--font-family);
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            backdrop-filter: blur(10px);
+        }
+
+        .theme-toggle:hover, .new-session-btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
+        }
+
+        .status-indicator {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+
+        .status-indicator.connected {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-indicator.disconnected {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .status-indicator.connecting {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .status-indicator::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main content with view system */
+        .app-main-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: var(--bg-secondary);
+        }
+
         .view {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.4s ease, transform 0.4s ease;
-            transform: translateX(20px);
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .view.active { opacity: 1; visibility: visible; transform: translateX(0); }
 
-        /* Chat View */
-        #chatView { z-index: 5; }
-        .chat-messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 18px; }
-        .message-bubble { max-width: 80%; padding: 12px 18px; border-radius: var(--radius-md); line-height: 1.6; animation: fadeIn 0.5s ease-out; }
-        .message-bubble.user { background: var(--primary); color: var(--bg-dark); align-self: flex-end; border-bottom-right-radius: 4px; }
-        .message-bubble.bot { background: var(--surface1); color: var(--text-light); align-self: flex-start; border-bottom-left-radius: 4px; }
-        .chat-input-area { padding: 15px; background: var(--surface1); border-top: 1px solid var(--surface2); }
-        .chat-input-form { display: flex; align-items: center; gap: 10px; }
+        .view.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Enhanced Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-end;
+            gap: 12px;
+            animation: slideInMessage 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInMessage {
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message.bot {
+            justify-content: flex-start;
+        }
+
+        .message-content {
+            max-width: 80%;
+            padding: 16px 20px;
+            border-radius: var(--border-radius);
+            word-wrap: break-word;
+            line-height: 1.5;
+            font-weight: 400;
+            box-shadow: var(--shadow-sm);
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .message.user .message-content {
+            background: var(--primary-gradient);
+            color: var(--text-inverse);
+            border-bottom-right-radius: 6px;
+        }
+
+        .message.bot .message-content {
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            border-bottom-left-radius: 6px;
+            border: 1px solid var(--border-light);
+        }
+
+        .message-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+            background: var(--bg-primary);
+            border: 2px solid var(--border-color);
+            transition: var(--transition);
+        }
+
+        .message-avatar:hover {
+            transform: scale(1.05);
+        }
+
+        .message-avatar svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--primary-color);
+        }
+
+        .message.user .message-avatar {
+            order: 1;
+            background: var(--primary-gradient);
+        }
+
+        .message.user .message-avatar svg {
+            fill: white;
+        }
+
+        /* Quick Replies */
+        .quick-replies {
+            padding: 0 24px 16px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: var(--transition);
+        }
+
+        .quick-replies.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .quick-reply-btn {
+            background: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-family: var(--font-family);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+
+        .quick-reply-btn:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Enhanced Input Area */
+        .chat-input-container {
+            padding: 20px 24px;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .chat-input-form {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            position: relative;
+        }
+
         .chat-input {
-            flex: 1; background: var(--bg-dark); border: 1px solid var(--surface2); border-radius: 30px;
-            padding: 12px 20px; color: var(--text-light); font-size: 16px;
-            outline: none; transition: all 0.3s ease;
+            flex: 1;
+            padding: 16px 20px;
+            border: 2px solid var(--border-color);
+            border-radius: 24px;
+            font-size: 16px;
+            font-family: var(--font-family);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            outline: none;
+            transition: var(--transition);
+            resize: none;
+            min-height: 52px;
+            max-height: 120px;
         }
-        .chat-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91, 192, 190, 0.2); }
-        .send-btn {
-            background: var(--primary); border: none; width: 48px; height: 48px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: transform 0.2s ease;
-        }
-        .send-btn:hover { transform: scale(1.1); }
-        .send-btn svg { fill: var(--bg-dark); }
 
-        /* Tools View */
-        #toolsView { padding: 20px; overflow-y: auto; gap: 20px; display: grid; grid-template-columns: 1fr 1fr; }
+        .chat-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: var(--bg-primary);
+        }
+
+        .chat-input:disabled {
+            background: var(--bg-tertiary);
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .send-button {
+            background: var(--primary-gradient);
+            color: var(--text-inverse);
+            border: none;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .send-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        .send-button:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+
+        .send-button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+
+        /* Enhanced Typing Indicator */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            margin: 0 24px 24px;
+            gap: 12px;
+            animation: slideInMessage 0.3s ease;
+        }
+
+        .typing-dots {
+            background: var(--bg-primary);
+            border-radius: 20px;
+            padding: 16px 20px;
+            display: flex;
+            gap: 6px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-light);
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: var(--text-muted);
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes typingBounce {
+            0%, 80%, 100% {
+                transform: scale(0.8);
+                opacity: 0.5;
+            }
+            40% {
+                transform: scale(1.2);
+                opacity: 1;
+            }
+        }
+
+        /* Enhanced Error Messages */
+        .error-message {
+            background: rgba(245, 101, 101, 0.1);
+            color: var(--error-color);
+            padding: 16px 20px;
+            border-radius: var(--border-radius);
+            margin: 0 24px 20px;
+            border-left: 4px solid var(--error-color);
+            animation: slideInMessage 0.3s ease;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .welcome-message {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 20px;
+            font-size: 14px;
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            margin: 24px;
+            border: 1px solid var(--border-light);
+        }
+
+        /* Enhanced Tools View */
+        #toolsView {
+            padding: 24px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            align-content: start;
+        }
+
         .tool-card {
-            background: var(--surface1); border-radius: var(--radius-md); padding: 20px;
-            text-align: center; cursor: pointer; transition: transform 0.3s ease, background 0.3s ease;
-            border: 1px solid var(--surface2);
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            cursor: pointer;
+            transition: var(--transition);
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
         }
-        .tool-card:hover { transform: translateY(-5px); background: var(--surface2); }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--primary-gradient);
+            transform: scaleX(0);
+            transition: var(--transition);
+            transform-origin: left;
+        }
+
+        .tool-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .tool-card:hover::before {
+            transform: scaleX(1);
+        }
+
         .tool-card-icon {
-            width: 50px; height: 50px; background: var(--surface2); border-radius: 12px;
-            display: inline-flex; align-items: center; justify-content: center; margin-bottom: 15px;
+            width: 56px;
+            height: 56px;
+            background: var(--primary-gradient);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            box-shadow: var(--shadow-sm);
         }
-        .tool-card-icon svg { fill: var(--primary); width: 28px; height: 28px; }
-        .tool-card h3 { font-size: 14px; font-weight: 600; margin-bottom: 5px; }
-        .tool-card p { font-size: 12px; color: var(--text-medium); line-height: 1.4; }
 
-        /* Navigácia */
-        .app-nav { display: flex; background: var(--surface1); padding: 10px 0; border-top: 1px solid var(--surface2); }
+        .tool-card-icon svg {
+            fill: white;
+            width: 28px;
+            height: 28px;
+        }
+
+        .tool-card-content h3 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-primary);
+        }
+
+        .tool-card-content p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        /* Navigation with improved design */
+        .app-nav {
+            display: flex;
+            background: var(--bg-primary);
+            border-top: 1px solid var(--border-color);
+            padding: 12px 0;
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+        }
+
         .nav-btn {
-            flex: 1; background: none; border: none; color: var(--text-medium);
-            display: flex; flex-direction: column; align-items: center; gap: 4px;
-            cursor: pointer; transition: color 0.3s ease; font-family: var(--font-family);
+            flex: 1;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: var(--font-family);
+            padding: 8px;
+            border-radius: 12px;
+            margin: 0 4px;
+            position: relative;
         }
-        .nav-btn.active, .nav-btn:hover { color: var(--text-light); }
-        .nav-btn svg { width: 24px; height: 24px; fill: currentColor; }
-        .nav-btn span { font-size: 11px; font-weight: 500; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .nav-btn.active,
+        .nav-btn:hover {
+            color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
 
-        @media (max-width: 450px) {
-            .app-container { height: 100vh; max-height: 100vh; border-radius: 0; border: none; }
+        .nav-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+            transition: var(--transition);
+        }
+
+        .nav-btn.active svg {
+            transform: scale(1.1);
+        }
+
+        .nav-btn span {
+            font-size: 11px;
+            font-weight: 500;
+        }
+
+        /* Overlay improvements */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .overlay-container {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius-lg);
+            padding: 32px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: var(--shadow-lg);
+            border: 1px solid var(--border-color);
+            animation: slideInScale 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInScale {
+            from {
+                opacity: 0;
+                transform: scale(0.9) translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        /* Daily Affirmations Feature */
+        .daily-affirmation {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 24px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .daily-affirmation::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--primary-gradient);
+        }
+
+        .affirmation-text {
+            font-size: 16px;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            font-style: italic;
+        }
+
+        .affirmation-author {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+
+        /* Progress tracking */
+        .progress-section {
+            background: var(--bg-primary);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 24px;
+            border: 1px solid var(--border-light);
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .progress-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .progress-badge {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-tertiary);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary-gradient);
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            body {
+                padding: 0;
+                align-items: stretch;
+            }
+
+            .app-container {
+                width: 100%;
+                height: 100vh;
+                border-radius: 0;
+                max-width: none;
+            }
+
+            .chat-header {
+                padding: 20px 16px;
+            }
+
+            .header-controls {
+                right: 16px;
+            }
+
+            .status-indicator {
+                left: 16px;
+            }
+
+            .chat-messages {
+                padding: 16px;
+            }
+
+            .chat-input-container {
+                padding: 16px;
+            }
+
+            #toolsView {
+                grid-template-columns: 1fr;
+                padding: 16px;
+            }
+
+            .overlay-container {
+                padding: 24px;
+                width: 95%;
+            }
+
+            .message-content {
+                max-width: 85%;
+            }
+
+            .quick-replies {
+                padding: 0 16px 16px;
+            }
+        }
+
+        /* Additional animations */
+        @keyframes shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+            100% {
+                background-position: calc(200px + 100%) 0;
+            }
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, transparent, rgba(102, 126, 234, 0.1), transparent);
+            background-size: 200px 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        /* Scroll bar styling */
+        .chat-messages::-webkit-scrollbar,
+        .overlay-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track,
+        .overlay-container::-webkit-scrollbar-track {
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb,
+        .overlay-container::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb:hover,
+        .overlay-container::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
+        }
+
+        /* Focus states for accessibility */
+        .nav-btn:focus,
+        .tool-card:focus,
+        .quick-reply-btn:focus,
+        .theme-toggle:focus,
+        .new-session-btn:focus {
+            outline: 2px solid var(--primary-color);
+            outline-offset: 2px;
         }
     </style>
 </head>
-<body>
-    
-    <video autoplay muted loop id="background-video">
-        <!-- Použite nejaké pekné, pomalé video, napr. z pexels.com -->
-        <source src="https://videos.pexels.com/video-files/4784435/4784435-hd.mp4" type="video/mp4">
-    </video>
-
+<body data-theme="light">
     <div class="app-container">
-        <header class="app-header">
-            <h1 id="headerTitle">Serene</h1>
+        <header class="chat-header">
+            <div class="status-indicator connecting" id="statusIndicator">
+                <span>Pripájanie...</span>
+            </div>
+            
+            <div class="header-controls">
+                <button class="theme-toggle" id="themeToggle" aria-label="Prepnúť tmavý režim">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="5"/>
+                        <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                    </svg>
+                    <span class="theme-text">Svetlý</span>
+                </button>
+                <button class="new-session-btn" onclick="startNewSession()" id="newSessionBtn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                        <path d="M21 3v5h-5"/>
+                    </svg>
+                    <span>Nový chat</span>
+                </button>
+            </div>
+
+            <div class="header-brand">
+                <div class="brand-logo">🧘</div>
+                <h1 id="headerTitle">KlidBot</h1>
+            </div>
+            <p id="headerSubtitle" class="chat-subtitle">Váš AI terapeutický spoločník pre každodenné wellbeing</p>
         </header>
 
         <main class="app-main-content">
-            
+            <!-- Chat View -->
             <div id="chatView" class="view active">
                 <div class="chat-messages" id="chatMessages">
-                    <div class="message-bubble bot">Dobrý deň. Som Serene, váš sprievodca pokojom. Som tu, aby som vás vypočul.</div>
+                    <div class="welcome-message">
+                        💫 Vitajte v KlidBot - vašom bezpečnom priestore pre wellbeing a duševnú pohodu.
+                    </div>
+                    
+                    <div class="daily-affirmation">
+                        <div class="affirmation-text">"Každý deň je nová príležitosť na rast a sebapoznanie."</div>
+                        <div class="affirmation-author">— Dnešná afirmácia</div>
+                    </div>
+
+                    <div class="progress-section">
+                        <div class="progress-header">
+                            <div class="progress-title">🎯 Týždenný pokrok</div>
+                            <div class="progress-badge">3/7 dní</div>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 43%"></div>
+                        </div>
+                        <div class="progress-text">Skvele pokračujte! Už 3 dni za sebou ste si našli čas na wellbeing.</div>
+                    </div>
+
+                    <div class="message bot">
+                        <div class="message-avatar">
+                            <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/>
+                            </svg>
+                        </div>
+                        <div class="message-content">
+                            Ahoj! Som KlidBot, váš AI terapeutický spoločník. 😊 Som tu, aby som vás podporil na vašej ceste k lepšiemu wellbeingu. Ako sa dnes cítite?
+                        </div>
+                    </div>
                 </div>
-                <div class="chat-input-area">
-                    <form class="chat-input-form" onsubmit="event.preventDefault(); sendMessage();">
-                        <input type="text" id="messageInput" class="chat-input" placeholder="Napíšte správu..." autocomplete="off">
-                        <button type="submit" class="send-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 0 24 24" width="24px"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+
+                <div class="quick-replies" id="quickReplies">
+                    <button class="quick-reply-btn" onclick="sendQuickReply('Cítim sa dobre')">😊 Cítim sa dobre</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('Trochu úzkost')">😰 Trochu úzkost</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('Som vyčerpaný')">😴 Som vyčerpaný</button>
+                    <button class="quick-reply-btn" onclick="sendQuickReply('Potrebujem pomoc')">🆘 Potrebujem pomoc</button>
+                </div>
+
+                <div class="typing-indicator" id="typingIndicator">
+                    <div class="message-avatar">
+                        <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/>
+                        </svg>
+                    </div>
+                    <div class="typing-dots">
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                        <div class="dot"></div>
+                    </div>
+                </div>
+
+                <div class="chat-input-container">
+                    <form class="chat-input-form" id="chatForm">
+                        <textarea class="chat-input" id="messageInput" placeholder="Zdieľajte svoje myšlienky..." maxlength="500" disabled rows="1"></textarea>
+                        <button type="submit" class="send-button" id="sendButton" disabled aria-label="Odoslať správu">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"/>
+                                <polygon points="22,2 15,22 11,13 2,9 22,2"/>
+                            </svg>
                         </button>
                     </form>
                 </div>
             </div>
 
+            <!-- Tools View with enhanced cards -->
             <div id="toolsView" class="view">
-                <div class="tool-card">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.2,19H12.8C13.9,19 14.8,18.1 14.8,17V15H9.2V17C9.2,18.1 10.1,19 11.2,19H11.8V19.5C11.8,19.8 12,20 12.3,20S12.8,19.8 12.8,19.5V19M19.7,9.8C19.4,9.5 19,9.3 18.5,9.3H15.3V6.8C15.3,6.3 14.8,5.9 14.3,5.9S13.3,6.3 13.3,6.8V9.3H10.8V4.8C10.8,4.3 10.3,3.9 9.8,3.9S8.8,4.3 8.8,4.8V9.3H5.5C5,9.3 4.6,9.5 4.3,9.8C4,10.1 3.9,10.6 4.1,11L8.1,14.3H15.9L19.9,11C20.1,10.6 20,10.1 19.7,9.8Z"/></svg></div>
-                    <h3>Dychové cvičenia</h3>
-                    <p>Techniky na rýchle upokojenie a zníženie stresu.</p>
+                <div class="tool-card" onclick="startBreathingExercise()">
+                    <div class="tool-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12,2C6.48,2 2,6.48 2,12C2,17.52 6.48,22 12,22C17.52,22 22,17.52 22,12C22,6.48 17.52,2 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20M12,6C8.69,6 6,8.69 6,12C6,15.31 8.69,18 12,18C15.31,18 18,15.31 18,12C18,8.69 15.31,6 12,6Z"/>
+                        </svg>
+                    </div>
+                    <div class="tool-card-content">
+                        <h3>🌬️ Riadené dýchanie</h3>
+                        <p>4-7-8, Box breathing a ďalšie techniky pre okamžité upokojenie a redukciu stresu.</p>
+                    </div>
                 </div>
-                <div class="tool-card">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19,3H5A2,2 0 0,0 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5A2,2 0 0,0 19,3M19,19H5V5H19V19M17,17H7V15H17V17M17,13H7V11H17V13M17,9H7V7H17V9Z"/></svg></div>
-                    <h3>Denník</h3>
-                    <p>Zapisujte si myšlienky a pocity pre lepšie sebapoznanie.</p>
+
+                <div class="tool-card" onclick="startStressTracking()">
+                    <div class="tool-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M14.5,9A1.5,1.5 0 0,1 16,10.5A1.5,1.5 0 0,1 14.5,12A1.5,1.5 0 0,1 13,10.5A1.5,1.5 0 0,1 14.5,9M9.5,9A1.5,1.5 0 0,1 11,10.5A1.5,1.5 0 0,1 9.5,12A1.5,1.5 0 0,1 8,10.5A1.5,1.5 0 0,1 9.5,9M12,17.23C10.25,17.23 8.71,16.5 7.81,15.42L9.23,14C9.68,14.72 10.75,15.23 12,15.23C13.25,15.23 14.32,14.72 14.77,14L16.19,15.42C15.29,16.5 13.75,17.23 12,17.23Z"/>
+                        </svg>
+                    </div>
+                    <div class="tool-card-content">
+                        <h3>📊 Mood Tracker</h3>
+                        <p>Denné sledovanie nálady, energie a stresu s personalizovanými insights a trendmi.</p>
+                    </div>
                 </div>
-                <div class="tool-card">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,16A2,2 0 0,0 14,14A2,2 0 0,0 12,12A2,2 0 0,0 10,14A2,2 0 0,0 12,16M12,3A9,9 0 0,0 3,12A9,9 0 0,0 12,21A9,9 0 0,0 21,12A9,9 0 0,0 12,3M12,19.5A7.5,7.5 0 0,1 4.5,12A7.5,7.5 0 0,1 12,4.5A7.5,7.5 0 0,1 19.5,12A7.5,7.5 0 0,1 12,19.5Z"/></svg></div>
-                    <h3>Sledovanie nálady</h3>
-                    <p>Pravidelne zaznamenávajte svoju náladu a sledujte trendy.</p>
+
+                <div class="tool-card" onclick="openPssAssessment()">
+                    <div class="tool-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M19,3H5C3.89,3 3,3.89 3,5V19C3,20.11 3.9,21 5,21H19C20.11,21 21,20.11 21,19V5C21,3.89 20.11,3 19,3M19,5V19H5V5H19M17,17H7V15H17V17M17,13H7V11H17V13M17,9H7V7H17V9Z"/>
+                        </svg>
+                    </div>
+                    <div class="tool-card-content">
+                        <h3>🧠 PSS-10 Assessment</h3>
+                        <p>Vedecky validovaný dotazník na meranie vnímaného stresu za posledný mesiac.</p>
+                    </div>
                 </div>
-                <div class="tool-card">
-                    <div class="tool-card-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,4A8,8 0 0,1 20,12A8,8 0 0,1 12,20A8,8 0 0,1 4,12A8,8 0 0,1 12,4M12,9L9.5,12H14.5L12,9M12,15L14.5,12H9.5L12,15Z"/></svg></div>
-                    <h3>Vizualizácie</h3>
-                    <p>Riadené cvičenia na relaxáciu a budovanie pozitívnych predstáv.</p>
+
+                <div class="tool-card" onclick="openJournalingTool()">
+                    <div class="tool-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/>
+                        </svg>
+                    </div>
+                    <div class="tool-card-content">
+                        <h3>📝 Mindful Journal</h3>
+                        <p>Dennné zapisovanie myšlienok, emócií a vďačnosti pre lepšie sebapoznanie.</p>
+                    </div>
+                </div>
+
+                <div class="tool-card" onclick="openMeditationGuide()">
+                    <div class="tool-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,1 22,12A10,10 0 0,1 12,22A10,10 0 0,1 2,12A10,10 0 0,1 12,2M12,4A8,8 0 0,0 4,12A8,8 0 0,0 12,20A8,8 0 0,0 20,12A8,8 0 0,0 12,4M12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18A6,6 0 0,1 6,12A6,6 0 0,1 12,6Z"/>
+                        </svg>
+                    </div>
+                    <div class="tool-card-content">
+                        <h3>🧘 Guided Meditation</h3>
+                        <p>Krátke meditácie pre rôzne situácie - spánok, stres, sústredenie, sebaláska.</p>
+                    </div>
+                </div>
+
+                <div class="tool-card" onclick="openCrisisResources()">
+                    <div class="tool-card-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M13,17H11V15H13V17M13,13H11V7H13V13Z"/>
+                        </svg>
+                    </div>
+                    <div class="tool-card-content">
+                        <h3>🆘 Krízová pomoc</h3>
+                        <p>Okamžitý prístup k linke pomoci, krízovým kontaktom a núdzovým technikám.</p>
+                    </div>
                 </div>
             </div>
 
-            <!-- TODO: Add Journal and Dashboard Views here -->
-
+            <!-- Dashboard View remains same but with enhanced styling -->
+            <div id="dashboardView" class="view dashboard-view">
+                <!-- Dashboard content would go here -->
+            </div>
         </main>
 
         <nav class="app-nav">
-            <button class="nav-btn active" data-view="chatView" data-title="Serene">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H5.2L4,17.2V4H20V16M6,9H18V11H6V9M6,12H15V14H6V12M6,6H18V8H6V6Z"/></svg>
+            <button class="nav-btn active" data-view="chatView" data-title="KlidBot" data-subtitle="Váš AI terapeutický spoločník pre každodenné wellbeing">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M20,2H4A2,2 0 0,0 2,4V22L6,18H20A2,2 0 0,0 22,16V4A2,2 0 0,0 20,2M20,16H5.2L4,17.2V4H20V16M6,9H18V11H6V9M6,12H15V14H6V12M6,6H18V8H6V6Z"/>
+                </svg>
                 <span>Chat</span>
             </button>
-            <button class="nav-btn" data-view="toolsView" data-title="Knižnica nástrojov">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16,20H20V16H16M16,14H20V10H16M14,20H10V16H14M14,14H10V10H14M8,20H4V16H8M8,14H4V10H8V14Z"/></svg>
+            <button class="nav-btn" data-view="toolsView" data-title="🛠️ Wellbeing nástroje" data-subtitle="Interaktívne cvičenia a techniky pre duševnú pohodu">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M12,15.5A3.5,3.5 0 0,1 8.5,12A3.5,3.5 0 0,1 12,8.5A3.5,3.5 0 0,1 15.5,12A3.5,3.5 0 0,1 12,15.5M19.43,12.97C19.47,12.65 19.5,12.33 19.5,12C19.5,11.67 19.47,11.34 19.43,11L21.54,9.37C21.73,9.22 21.78,8.95 21.66,8.73L19.66,5.27C19.54,5.05 19.27,4.96 19.05,5.05L16.56,6.05C16.04,5.66 15.5,5.32 14.87,5.07L14.5,2.42C14.46,2.18 14.25,2 14,2H10C9.75,2 9.54,2.18 9.5,2.42L9.13,5.07C8.5,5.32 7.96,5.66 7.44,6.05L4.95,5.05C4.73,4.96 4.46,5.05 4.34,5.27L2.34,8.73C2.22,8.95 2.27,9.22 2.46,9.37L4.57,11C4.53,11.34 4.5,11.67 4.5,12C4.5,12.33 4.53,12.65 4.57,12.97L2.46,14.63C2.27,14.78 2.22,15.05 2.34,15.27L4.34,18.73C4.46,18.95 4.73,19.03 4.95,18.95L7.44,17.94C7.96,18.34 8.5,18.68 9.13,18.93L9.5,21.58C9.54,21.82 9.75,22 10,22H14C14.25,22 14.46,21.82 14.5,21.58L14.87,18.93C15.5,18.68 16.04,18.34 16.56,17.94L19.05,18.95C19.27,19.03 19.54,18.95 19.66,18.73L21.66,15.27C21.78,15.05 21.73,14.78 21.54,14.63L19.43,12.97Z"/>
+                </svg>
                 <span>Nástroje</span>
             </button>
-            <!-- TODO: Add Journal and Dashboard Nav Buttons here -->
+            <button class="nav-btn" data-view="dashboardView" data-title="📈 Wellbeing Dashboard" data-subtitle="Vaše pokroky, trendy a personalizované insights">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M22,21H2V3H4V19H6V17H10V19H12V16H16V19H18V17H22V21M16,8H18V15H16V8M12,2H14V15H12V2M8,9H10V15H8V9M4,11H6V15H4V11Z"/>
+                </svg>
+                <span>Dashboard</span>
+            </button>
         </nav>
     </div>
 
     <script>
-    // Simplified JS for demonstration - ready to be moved to separate files
-    const navButtons = document.querySelectorAll('.nav-btn');
-    const views = document.querySelectorAll('.view');
-    const headerTitle = document.getElementById('headerTitle');
-    const messageInput = document.getElementById('messageInput');
-    const chatMessages = document.getElementById('chatMessages');
+        // Global Variables
+        const API_BASE_URL = '';
+        const CHECK_CONNECTION_INTERVAL = 30000;
+        let isConnected = false;
+        let connectionCheckInterval;
 
-    // Navigation logic
-    navButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            navButtons.forEach(btn => btn.classList.remove('active'));
-            button.classList.add('active');
+        // Theme Management
+        const themeToggle = document.getElementById('themeToggle');
+        const themeText = themeToggle.querySelector('.theme-text');
+        const sunIcon = `<circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>`;
+        const moonIcon = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>`;
 
-            const viewId = button.dataset.view;
-            const title = button.dataset.title;
+        function initializeTheme() {
+            const savedTheme = localStorage.getItem('klidbot-theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            updateThemeButton(savedTheme);
+        }
 
-            views.forEach(view => {
-                if (view.id === viewId) {
-                    view.classList.add('active');
+        function toggleTheme() {
+            const currentTheme = document.body.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.body.setAttribute('data-theme', newTheme);
+            localStorage.setItem('klidbot-theme', newTheme);
+            updateThemeButton(newTheme);
+        }
+
+        function updateThemeButton(theme) {
+            const icon = themeToggle.querySelector('svg');
+            if (theme === 'dark') {
+                icon.innerHTML = sunIcon;
+                themeText.textContent = 'Tmavý';
+            } else {
+                icon.innerHTML = moonIcon;
+                themeText.textContent = 'Svetlý';
+            }
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Enhanced Auto-resize for textarea
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
+        }
+
+        // Connection Management
+        async function checkConnection() {
+            const statusIndicator = document.getElementById('statusIndicator');
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`, { 
+                    method: 'GET', 
+                    credentials: 'include' 
+                });
+                
+                if (response.ok) {
+                    isConnected = true;
+                    statusIndicator.innerHTML = '<span>Pripojené</span>';
+                    statusIndicator.className = 'status-indicator connected';
+                    messageInput.disabled = false;
+                    sendButton.disabled = false;
+                    messageInput.placeholder = 'Zdieľajte svoje myšlienky...';
+                    showQuickReplies();
                 } else {
-                    view.classList.remove('active');
+                    throw new Error('Server not healthy');
+                }
+            } catch (error) {
+                isConnected = false;
+                statusIndicator.innerHTML = '<span>Odpojené</span>';
+                statusIndicator.className = 'status-indicator disconnected';
+                if (messageInput) {
+                    messageInput.disabled = true;
+                    sendButton.disabled = true;
+                    messageInput.placeholder = 'Server nie je dostupný...';
+                    hideQuickReplies();
+                }
+            }
+        }
+
+        // Quick Replies Management
+        function showQuickReplies() {
+            const quickReplies = document.getElementById('quickReplies');
+            quickReplies.classList.add('show');
+        }
+
+        function hideQuickReplies() {
+            const quickReplies = document.getElementById('quickReplies');
+            quickReplies.classList.remove('show');
+        }
+
+        function sendQuickReply(message) {
+            const messageInput = document.getElementById('messageInput');
+            messageInput.value = message;
+            sendMessage(new Event('submit'));
+            hideQuickReplies();
+        }
+
+        // Enhanced Message Handling
+        async function sendMessage(event) {
+            event.preventDefault();
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message || messageInput.disabled) return;
+            if (!isConnected) {
+                showError('Nie je možné pripojiť sa k serveru. Skúšame znova...');
+                checkConnection();
+                return;
+            }
+
+            addMessage(message, 'user');
+            messageInput.value = '';
+            autoResize(messageInput);
+            document.getElementById('sendButton').disabled = true;
+            messageInput.disabled = true;
+            hideQuickReplies();
+            showTypingIndicator();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ message: message })
+                });
+                
+                const data = await response.json();
+                hideTypingIndicator();
+
+                if (response.ok) {
+                    if (data.response_sequence && data.response_sequence.length > 0) {
+                        for (let i = 0; i < data.response_sequence.length; i++) {
+                            const msg = data.response_sequence[i];
+                            await new Promise(resolve => setTimeout(resolve, i === 0 ? 100 : 800));
+                            addMessage(msg.content, 'bot');
+                        }
+                        showQuickReplies();
+                    } else {
+                        showError('Server vrátil prázdnu odpoveď.');
+                    }
+                } else {
+                    throw new Error(data.error || 'Nepodarilo sa získať odpoveď zo servera');
+                }
+            } catch (error) {
+                console.error('Error sending message:', error);
+                showError('Chyba siete. Skontrolujte pripojenie a skúste to znova.');
+                await checkConnection();
+            } finally {
+                hideTypingIndicator();
+                if (isConnected) {
+                    document.getElementById('sendButton').disabled = false;
+                    messageInput.disabled = false;
+                    messageInput.focus();
+                }
+            }
+        }
+
+        function addMessage(content, sender) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const avatarSVG = sender === 'user'
+                ? `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12A10,10,0,0,0,12,22A10,10,0,0,0,22,12A10,10,0,0,0,12,2ZM12,6a3,3,0,1,1-3,3A3,3,0,0,1,12,6Zm0,14a7,7,0,0,1-7-7c0-2.39,1.95-4.36,4.36-4.36h5.28C17.05,8.64,19,10.61,19,13A7,7,0,0,1,12,20Z"/></svg>`
+                : `<svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/></svg>`;
+
+            messageDiv.innerHTML = `
+                <div class="message-avatar">${avatarSVG}</div>
+                <div class="message-content">${content}</div>
+            `;
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function showError(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"/>
+                    <line x1="15" y1="9" x2="9" y2="15"/>
+                    <line x1="9" y1="9" x2="15" y2="15"/>
+                </svg>
+                ${message}
+            `;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            setTimeout(() => { 
+                if (errorDiv.parentNode) errorDiv.remove(); 
+            }, 5000);
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'flex';
+            document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'none';
+        }
+
+        async function startNewSession() {
+            if (!isConnected) return showError('Nie je možné pripojiť sa k serveru.');
+            if (!confirm('Naozaj chcete začať novú konverzáciu?')) return;
+            
+            try {
+                const response = await fetch(`${API_BASE_URL}/new-session`, { 
+                    method: 'POST', 
+                    credentials: 'include' 
+                });
+                
+                if (response.ok) {
+                    // Reset chat with enhanced welcome message
+                    document.getElementById('chatMessages').innerHTML = `
+                        <div class="welcome-message">
+                            💫 Vitajte v KlidBot - vašom bezpečnom priestore pre wellbeing a duševnú pohodu.
+                        </div>
+                        
+                        <div class="daily-affirmation">
+                            <div class="affirmation-text">"Každý deň je nová príležitosť na rast a sebapoznanie."</div>
+                            <div class="affirmation-author">— Dnešná afirmácia</div>
+                        </div>
+
+                        <div class="progress-section">
+                            <div class="progress-header">
+                                <div class="progress-title">🎯 Týždenný pokrok</div>
+                                <div class="progress-badge">1/7 dní</div>
+                            </div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 14%"></div>
+                            </div>
+                            <div class="progress-text">Nový začiatok! Dnes je prvý deň vašej wellbeing cesty.</div>
+                        </div>
+
+                        <div class="message bot">
+                            <div class="message-avatar">
+                                <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12,2A10,10,0,0,0,2,12a9.89,9.89,0,0,0,2.3,6.32l-1.5,4.35a1,1,0,0,0,1.26,1.26l4.35-1.5A10,10,0,1,0,12,2Zm4,11H14.5a.5.5,0,0,1,0-1H16a1,1,0,0,1,0,2Zm-8,0H6.5a.5.5,0,0,1,0-1H8a1,1,0,0,1,0,2Zm5.5,3.5c-2.58,0-4.83-1.63-5.5-4h11C16.33,14.87,14.08,16.5,11.5,16.5Z"/>
+                                </svg>
+                            </div>
+                            <div class="message-content">
+                                Ahoj! Som KlidBot, váš AI terapeutický spoločník. 😊 Som tu, aby som vás podporil na vašej ceste k lepšiemu wellbeingu. Ako sa dnes cítite?
+                            </div>
+                        </div>
+                    `;
+                    
+                    addMessage('Nová konverzácia bola spustená. Som pripravený počúvať a podporiť vás! ✨', 'bot');
+                    showQuickReplies();
+                } else {
+                    throw new Error('Nepodarilo sa začať novú konverzáciu');
+                }
+            } catch (error) {
+                showError(error.message);
+            }
+        }
+
+        // Tool Functions (placeholders for now)
+        function startBreathingExercise() {
+            alert('🌬️ Dychové cvičenie sa čoskoro spustí...');
+        }
+
+        function startStressTracking() {
+            alert('📊 Mood Tracker sa čoskoro spustí...');
+        }
+
+        function openPssAssessment() {
+            alert('🧠 PSS-10 Assessment sa čoskoro spustí...');
+        }
+
+        function openJournalingTool() {
+            alert('📝 Mindful Journal sa čoskoro spustí...');
+        }
+
+        function openMeditationGuide() {
+            alert('🧘 Guided Meditation sa čoskoro spustí...');
+        }
+
+        function openCrisisResources() {
+            const crisisMessage = `🆘 KRÍZOVÁ POMOC 24/7:
+
+📞 **Okamžitá pomoc:**
+• 112 - Tiesňové volanie
+• 155 - Záchranka
+• 158 - Polícia
+
+💙 **Krízové linky:**
+• 0800 800 566 - Linka dôvery Nezábudka
+• 116 111 - Linka bezpečí
+• www.krizovalinkapomoci.sk
+
+Nie ste sami. Pomoc je vždy dostupná. 💙`;
+            
+            addMessage(crisisMessage, 'bot');
+        }
+
+        // Navigation System
+        function initializeNavigation() {
+            const navButtons = document.querySelectorAll('.nav-btn');
+            const views = document.querySelectorAll('.view');
+            const headerTitle = document.getElementById('headerTitle');
+            const headerSubtitle = document.getElementById('headerSubtitle');
+            const newSessionBtn = document.getElementById('newSessionBtn');
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const viewId = button.dataset.view;
+                    const title = button.dataset.title;
+                    const subtitle = button.dataset.subtitle;
+                    
+                    views.forEach(view => view.classList.remove('active'));
+                    document.getElementById(viewId).classList.add('active');
+                    
+                    headerTitle.textContent = title;
+                    headerSubtitle.textContent = subtitle;
+                    
+                    newSessionBtn.style.display = (viewId === 'chatView') ? 'flex' : 'none';
+                });
+            });
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTheme();
+            checkConnection();
+            connectionCheckInterval = setInterval(checkConnection, CHECK_CONNECTION_INTERVAL);
+            initializeNavigation();
+
+            // Chat form setup
+            const chatForm = document.getElementById('chatForm');
+            const messageInput = document.getElementById('messageInput');
+            
+            chatForm.addEventListener('submit', sendMessage);
+            
+            messageInput.addEventListener('input', function() {
+                autoResize(this);
+            });
+
+            messageInput.addEventListener('keypress', function(event) {
+                if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    chatForm.dispatchEvent(new Event('submit'));
                 }
             });
-            headerTitle.textContent = title;
+
+            // Focus management
+            setTimeout(() => messageInput.focus(), 100);
         });
-    });
 
-    function addMessage(content, type) {
-        const bubble = document.createElement('div');
-        bubble.classList.add('message-bubble', type);
-        bubble.textContent = content;
-        chatMessages.appendChild(bubble);
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (connectionCheckInterval) clearInterval(connectionCheckInterval);
+        });
 
-    async function sendMessage() {
-        const messageText = messageInput.value.trim();
-        if (messageText === '') return;
-
-        addMessage(messageText, 'user');
-        messageInput.value = '';
-        
-        // TODO: Add API call here
-        // For now, a simulated response
-        setTimeout(() => {
-            addMessage("Toto je simulovaná odpoveď. Prepojte ma s backendom.", 'bot');
-        }, 1000);
-    }
+        // Focus on window focus
+        window.addEventListener('focus', () => {
+            const messageInput = document.getElementById('messageInput');
+            if (!messageInput.disabled) messageInput.focus();
+        });
     </script>
 </body>
 </html>
