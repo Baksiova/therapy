@@ -1,5 +1,4 @@
 Flask==3.0.3
 gunicorn==22.0.0
-google-generativeai==0.8.2
+openai>=1.0.0 
 Flask-Cors==4.0.1
-openai==0.28.1
