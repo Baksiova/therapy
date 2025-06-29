@@ -1,6 +1,6 @@
-from flask import Flask, request, jsonify, session, send_from_directory  # ← PŘIDÁNO send_from_directory
+from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
-import google.generativeai as genai
+import openai
 import os
 import uuid
 import time
@@ -8,40 +8,44 @@ import re
 import unicodedata
 
 # Inicializácia aplikácie
-app = Flask(__name__, static_folder='static')  # ← PŘIDÁNO static_folder='static'
-app.secret_key = "gemini-therapy-key"
+app = Flask(__name__, static_folder='static')
+app.secret_key = "openai-therapy-key"
 CORS(app, supports_credentials=True, origins=[
     "https://asisterapie-bcbqhaawdqduavgq.westeurope-01.azurewebsites.net",
     "http://127.0.0.1:5000",  # pro local development
     "http://localhost:5000"   # pro local development
 ])
 
-# Konfigurácia Google Gemini - OPRAVENO pro environment variables
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
-if not GEMINI_API_KEY:
-    print("⚠️ WARNING: GEMINI_API_KEY environment variable not set!")
-    
-genai.configure(api_key=GEMINI_API_KEY)
+# Konfigurácia OpenAI API
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
+if not OPENAI_API_KEY:
+    print("⚠️ WARNING: OPENAI_API_KEY environment variable not set!")
+else:
+    openai.api_key = OPENAI_API_KEY
 
-# Inicializácia Gemini modelu
-try:
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    MODEL_NAME = 'gemini-1.5-flash'
-except Exception as e:
-    print(f"Failed to load 'gemini-1.5-flash': {e}. Trying 'gemini-pro'.")
-    try:
-        model = genai.GenerativeModel('gemini-pro')
-        MODEL_NAME = 'gemini-pro'
-    except Exception as e_pro:
-        print(f"Failed to load 'gemini-pro': {e_pro}. No model available.")
-        model = None
-        MODEL_NAME = 'No model available'
+# Nastavenie modelu
+MODEL_NAME = 'gpt-3.5-turbo'  # alebo 'gpt-4' ak máte prístup
+MODEL_AVAILABLE = bool(OPENAI_API_KEY)
 
 # Uchovávanie konverzácií
 conversations = {}
 
 # Systémový prompt
-THERAPY_SYSTEM_PROMPT = """You are Dr. Sarah Chen, an experienced licensed psychotherapist..."""
+THERAPY_SYSTEM_PROMPT = """You are Dr. Sarah Chen, an experienced licensed psychotherapist with over 15 years of practice specializing in cognitive-behavioral therapy, trauma-informed care, and crisis intervention. You provide compassionate, evidence-based mental health support in Slovak language.
+
+IMPORTANT GUIDELINES:
+- Always respond in Slovak language
+- Be empathetic, warm, and professional
+- Use person-centered approach
+- Validate emotions and experiences
+- Offer practical coping strategies when appropriate
+- Maintain appropriate therapeutic boundaries
+- If you detect crisis situation, prioritize safety and provide emergency resources
+- Keep responses concise but meaningful (2-4 sentences usually)
+- Use simple, accessible language
+- Show genuine care and concern
+
+You create a safe, non-judgmental space for people to share their thoughts and feelings."""
 
 def get_session_id():
     if 'session_id' not in session:
@@ -95,43 +99,69 @@ def generate_crisis_response_sequence():
         {"type": "safety_check", "content": "Som tu s vami. Ste práve teraz v bezpečí?"}
     ]
 
-def call_gemini_ai(user_message, conversation_history):
-    if model is None:
-        print("❌ No Gemini model available")
+def call_openai_api(user_message, conversation_history):
+    if not MODEL_AVAILABLE:
+        print("❌ No OpenAI API key available")
         return generate_fallback_response(user_message)
+    
     try:
-        context = THERAPY_SYSTEM_PROMPT + "\n\n"
+        # Pripravenie messages pre OpenAI API
+        messages = [{"role": "system", "content": THERAPY_SYSTEM_PROMPT}]
+        
+        # Pridanie posledných 10 správ z histórie
         recent_history = conversation_history[-10:] if len(conversation_history) > 10 else conversation_history
-        if recent_history:
-            context += "Previous conversation:\n"
-            for msg in recent_history:
-                context += f"{msg['role'].capitalize()}: {msg['content']}\n"
-        context += f"\nCurrent user message: {user_message}\n\nPlease respond as a compassionate therapy assistant:"
-        response = model.generate_content(context, generation_config=genai.types.GenerationConfig(temperature=0.7, max_output_tokens=300, top_p=0.8, top_k=40))
-        if hasattr(response, 'text') and response.text:
-            return response.text.strip()
-        elif hasattr(response, 'candidates') and response.candidates:
-            return response.candidates[0].content.parts[0].text.strip()
+        for msg in recent_history:
+            messages.append({
+                "role": "user" if msg["role"] == "user" else "assistant",
+                "content": msg["content"]
+            })
+        
+        # Pridanie aktuálnej správy
+        messages.append({"role": "user", "content": user_message})
+        
+        # Volanie OpenAI API
+        response = openai.ChatCompletion.create(
+            model=MODEL_NAME,
+            messages=messages,
+            max_tokens=300,
+            temperature=0.7,
+            top_p=0.9,
+            frequency_penalty=0.1,
+            presence_penalty=0.1
+        )
+        
+        if response.choices and len(response.choices) > 0:
+            return response.choices[0].message.content.strip()
         else:
-            print("❌ No text in Gemini response")
+            print("❌ No choices in OpenAI response")
             return generate_fallback_response(user_message)
+            
+    except openai.error.RateLimitError:
+        print("❌ OpenAI API rate limit exceeded")
+        return "Prepáčte, momentálne je server preťažený. Skúste to prosím o chvíľu."
+    except openai.error.InvalidRequestError as e:
+        print(f"❌ OpenAI API Invalid Request: {e}")
+        return generate_fallback_response(user_message)
+    except openai.error.AuthenticationError:
+        print("❌ OpenAI API Authentication failed")
+        return "Chyba autentifikácie. Kontaktujte administrátora."
     except Exception as e:
-        print(f"❌ Gemini API Error: {e}")
+        print(f"❌ OpenAI API Error: {e}")
         return generate_fallback_response(user_message)
 
 def generate_fallback_response(user_message):
-    if any(word in user_message.lower() for word in ['hello', 'hi', 'hey']):
-        return "Hello, I'm here to offer support. How are you feeling today?"
-    return "I hear you, and it sounds like you're going through a lot. Can you tell me more about what's happening?"
+    if any(word in user_message.lower() for word in ['ahoj', 'hello', 'hi', 'hey', 'dobry den']):
+        return "Ahoj, som tu na to, aby som vám ponúkol podporu. Ako sa dnes cítite?"
+    elif any(word in user_message.lower() for word in ['dakujem', 'thank', 'vďaka']):
+        return "Nie je za čo. Som tu pre vás. Môžete mi povedať viac o tom, čo vás trápi?"
+    else:
+        return "Počujem vás a rozumiem, že prechádzate ťažkým obdobím. Môžete mi povedať viac o tom, čo sa deje?"
 
 def list_available_models():
-    try:
-        return [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-    except Exception as e:
-        print(f"❌ Error listing models: {e}")
-        return []
+    """Vráti zoznam dostupných OpenAI modelov"""
+    return ['gpt-3.5-turbo', 'gpt-4'] if MODEL_AVAILABLE else []
 
-# ===== NOVÉ: Frontend route =====
+# ===== Frontend route =====
 @app.route('/', methods=['GET'])
 def frontend():
     """Servíruje frontend HTML aplikáciu"""
@@ -139,11 +169,10 @@ def frontend():
         return send_from_directory('static', 'index.html')
     except Exception as e:
         print(f"❌ Error serving frontend: {e}")
-        # Fallback na API info
         return jsonify({
-            "message": "Therapy Chatbot with Google Gemini AI", 
+            "message": "Therapy Chatbot with OpenAI GPT", 
             "status": "healthy", 
-            "mode": f"GOOGLE {MODEL_NAME}",
+            "mode": f"OpenAI {MODEL_NAME}",
             "available_models": list_available_models(),
             "features": ["Crisis detection", "Emergency resources", "Real AI responses"],
             "endpoints": {"health": "/health", "chat": "/chat", "new_session": "/new-session"},
@@ -152,11 +181,11 @@ def frontend():
 
 @app.route('/api', methods=['GET'])
 def api_info():
-    """API informácie (pôvodná root route)"""
+    """API informácie"""
     return jsonify({
-        "message": "Therapy Chatbot with Google Gemini AI", 
+        "message": "Therapy Chatbot with OpenAI GPT", 
         "status": "healthy", 
-        "mode": f"GOOGLE {MODEL_NAME}",
+        "mode": f"OpenAI {MODEL_NAME}",
         "available_models": list_available_models(),
         "features": ["Crisis detection", "Emergency resources", "Real AI responses"],
         "endpoints": {"health": "/health", "chat": "/chat", "new_session": "/new-session"}
@@ -165,8 +194,10 @@ def api_info():
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({
-        "status": "healthy", "message": "Gemini AI therapy server is running",
-        "mode": f"GOOGLE {MODEL_NAME}", "model_available": model is not None,
+        "status": "healthy", 
+        "message": "OpenAI GPT therapy server is running",
+        "mode": f"OpenAI {MODEL_NAME}", 
+        "model_available": MODEL_AVAILABLE,
         "active_sessions": len(conversations)
     })
 
@@ -174,49 +205,73 @@ def health():
 def chat():
     try:
         data = request.get_json()
-        if not data: return jsonify({"error": "No data provided"}), 400
+        if not data: 
+            return jsonify({"error": "No data provided"}), 400
+        
         user_message = data.get("message", "").strip()
-        if not user_message: return jsonify({"error": "Message is required"}), 400
+        if not user_message: 
+            return jsonify({"error": "Message is required"}), 400
+        
         session_id = get_session_id()
         print(f"🤖 Session: {session_id} | 👤 User: {user_message}")
 
+        # Kontrola krízy
         if detect_crisis_keywords(user_message):
             print(f"🚨 CRISIS DETECTED! Activating safety protocol for session {session_id}.")
             crisis_response_sequence = generate_crisis_response_sequence()
-            if session_id not in conversations: conversations[session_id] = []
+            
+            if session_id not in conversations: 
+                conversations[session_id] = []
             conversations[session_id].append({"role": "user", "content": user_message})
+            
             full_crisis_text = "\n".join([msg["content"] for msg in crisis_response_sequence])
             conversations[session_id].append({"role": "assistant", "content": f"[CRISIS PROTOCOL ACTIVATED] {full_crisis_text}"})
+            
             return jsonify({
-                "response_sequence": crisis_response_sequence, "session_id": session_id,
-                "crisis_detected": True, "powered_by": "Crisis Safety Protocol"
+                "response_sequence": crisis_response_sequence, 
+                "session_id": session_id,
+                "crisis_detected": True, 
+                "powered_by": "Crisis Safety Protocol"
             })
 
-        if session_id not in conversations: conversations[session_id] = []
+        # Normálna konverzácia
+        if session_id not in conversations: 
+            conversations[session_id] = []
+        
         conversations[session_id].append({"role": "user", "content": user_message})
-        print(f"🔄 Calling Google Gemini AI ({MODEL_NAME})...")
-        bot_reply = call_gemini_ai(user_message, conversations[session_id])
-        print(f"🤖 Gemini: {bot_reply[:100]}..." if len(bot_reply) > 100 else f"🤖 Gemini: {bot_reply}")
+        
+        print(f"🔄 Calling OpenAI API ({MODEL_NAME})...")
+        bot_reply = call_openai_api(user_message, conversations[session_id])
+        print(f"🤖 OpenAI: {bot_reply[:100]}..." if len(bot_reply) > 100 else f"🤖 OpenAI: {bot_reply}")
+        
         conversations[session_id].append({"role": "assistant", "content": bot_reply})
+        
+        # Obmedzenie histórie na posledných 20 správ
         if len(conversations[session_id]) > 20:
             conversations[session_id] = conversations[session_id][-20:]
+        
         return jsonify({
-            "response_sequence": [{"type": "standard", "content": bot_reply}], "session_id": session_id,
-            "powered_by": f"Google {MODEL_NAME}", "crisis_detected": False
+            "response_sequence": [{"type": "standard", "content": bot_reply}], 
+            "session_id": session_id,
+            "powered_by": f"OpenAI {MODEL_NAME}", 
+            "crisis_detected": False
         })
+        
     except Exception as e:
         print(f"❌ Error in /chat: {e}")
         fallback = generate_fallback_response(user_message if 'user_message' in locals() else "hello")
         return jsonify({
             "response_sequence": [{"type": "fallback", "content": fallback}],
-            "powered_by": "Fallback response", "error": "Used backup system"
+            "powered_by": "Fallback response", 
+            "error": "Used backup system"
         })
 
 @app.route('/new-session', methods=['POST'])
 def new_session():
     try:
         if 'session_id' in session:
-            if session['session_id'] in conversations: del conversations[session['session_id']]
+            if session['session_id'] in conversations: 
+                del conversations[session['session_id']]
         session.clear()
         new_session_id = get_session_id()
         print(f"✨ New session created: {new_session_id}")
@@ -245,13 +300,13 @@ def not_found(error):
 def internal_error(error):
     return jsonify({"error": "Internal server error"}), 500
 
-# Pro Azure App Service
+# Pre Azure App Service
 if __name__ == '__main__':
     print("=" * 80)
-    print("🩺 DR. SARAH CHEN - AI THERAPY PRACTICE (v2.3)")
+    print("🩺 DR. SARAH CHEN - AI THERAPY PRACTICE (v3.0)")
     print("=" * 80)
-    print(f"🧠 AI Model: {MODEL_NAME}")
-    print(f"🔗 Model Available: {'Yes' if model else 'No'}")
+    print(f"🧠 AI Model: OpenAI {MODEL_NAME}")
+    print(f"🔗 Model Available: {'Yes' if MODEL_AVAILABLE else 'No'}")
     print("🚨 Crisis Protocol: Enhanced Detection")
     print("🌐 Starting Azure App Service with Frontend...")
     print("=" * 80)
