@@ -1,6 +1,6 @@
 from flask import Flask, request, jsonify, session, send_from_directory
 from flask_cors import CORS
-import openai
+from openai import OpenAI
 import os
 import uuid
 import time
@@ -20,12 +20,13 @@ CORS(app, supports_credentials=True, origins=[
 OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
     print("⚠️ WARNING: OPENAI_API_KEY environment variable not set!")
+    client = None
 else:
-    openai.api_key = OPENAI_API_KEY
+    client = OpenAI(api_key=OPENAI_API_KEY)
 
 # Nastavenie modelu
 MODEL_NAME = 'gpt-3.5-turbo'  # alebo 'gpt-4' ak máte prístup
-MODEL_AVAILABLE = bool(OPENAI_API_KEY)
+MODEL_AVAILABLE = bool(OPENAI_API_KEY and client)
 
 # Uchovávanie konverzácií
 conversations = {}
@@ -100,8 +101,8 @@ def generate_crisis_response_sequence():
     ]
 
 def call_openai_api(user_message, conversation_history):
-    if not MODEL_AVAILABLE:
-        print("❌ No OpenAI API key available")
+    if not MODEL_AVAILABLE or not client:
+        print("❌ No OpenAI client available")
         return generate_fallback_response(user_message)
     
     try:
@@ -120,7 +121,7 @@ def call_openai_api(user_message, conversation_history):
         messages.append({"role": "user", "content": user_message})
         
         # Volanie OpenAI API
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model=MODEL_NAME,
             messages=messages,
             max_tokens=300,
@@ -136,18 +137,20 @@ def call_openai_api(user_message, conversation_history):
             print("❌ No choices in OpenAI response")
             return generate_fallback_response(user_message)
             
-    except openai.error.RateLimitError:
-        print("❌ OpenAI API rate limit exceeded")
-        return "Prepáčte, momentálne je server preťažený. Skúste to prosím o chvíľu."
-    except openai.error.InvalidRequestError as e:
-        print(f"❌ OpenAI API Invalid Request: {e}")
-        return generate_fallback_response(user_message)
-    except openai.error.AuthenticationError:
-        print("❌ OpenAI API Authentication failed")
-        return "Chyba autentifikácie. Kontaktujte administrátora."
     except Exception as e:
-        print(f"❌ OpenAI API Error: {e}")
-        return generate_fallback_response(user_message)
+        error_msg = str(e).lower()
+        if "rate limit" in error_msg:
+            print("❌ OpenAI API rate limit exceeded")
+            return "Prepáčte, momentálne je server preťažený. Skúste to prosím o chvíľu."
+        elif "invalid request" in error_msg:
+            print(f"❌ OpenAI API Invalid Request: {e}")
+            return generate_fallback_response(user_message)
+        elif "authentication" in error_msg or "authorization" in error_msg:
+            print("❌ OpenAI API Authentication failed")
+            return "Chyba autentifikácie. Kontaktujte administrátora."
+        else:
+            print(f"❌ OpenAI API Error: {e}")
+            return generate_fallback_response(user_message)
 
 def generate_fallback_response(user_message):
     if any(word in user_message.lower() for word in ['ahoj', 'hello', 'hi', 'hey', 'dobry den']):
